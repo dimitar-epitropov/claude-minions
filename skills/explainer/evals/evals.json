@@ -1,0 +1,51 @@
+{
+  "skill_name": "explainer",
+  "evals": [
+    {
+      "id": 0,
+      "name": "temporal-workflow-engine",
+      "prompt": "How does Temporal work? Explain its basics \u2014 activities, workflows, etc.",
+      "expected_output": "A layman + analogy explanation of Temporal that is grounded in the real terms (Workflow, Activity, Worker, Task Queue, durable execution, event history/replay). Intuition AND real vocabulary woven together, not segregated.",
+      "files": [],
+      "assertions": [
+        "Opens with a plain-language one-sentence statement of what Temporal is",
+        "Includes a concrete analogy (e.g. chef / notebook / recipe)",
+        "Names the real core terms: Workflow, Activity, Worker, Task Queue",
+        "Explains the durability mechanism: Event History and Replay",
+        "Mentions the determinism constraint on Workflows",
+        "Explicitly calls out where the analogy breaks down",
+        "Closes with actionable payoff / canonical search terms"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "nextjs-what-and-when",
+      "prompt": "Explain what is Next.js and when would I use it.",
+      "expected_output": "A grounded explanation of Next.js (React framework) with real terms (SSR, SSG, App Router/Pages Router, server components, file-based routing) plus concrete when-to-use guidance, in approachable language.",
+      "files": [],
+      "assertions": [
+        "States up front that Next.js is a React framework, in plain language",
+        "Includes a concrete analogy (engine/car or kitchen/restaurant)",
+        "Names real rendering strategies (SSR and SSG)",
+        "Names routing + component model terms (App Router, Server Components, file-based routing)",
+        "Provides concrete when-to-use AND when-not-to-use guidance",
+        "Closes with actionable payoff / vocabulary recap"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "js-multithreading",
+      "prompt": "Does JS have multithreading?",
+      "expected_output": "A grounded answer to a nuanced yes/no: JS execution is single-threaded (one call stack, event loop), but concurrency exists via async, and real parallelism via Web Workers / Worker threads. Real terms anchored to plain-language intuition.",
+      "files": [],
+      "assertions": [
+        "Gives a clear nuanced answer up front (single-threaded core, but...)",
+        "Distinguishes concurrency from parallelism",
+        "Names the event loop + call stack mechanism",
+        "Names real parallelism APIs: Web Workers and Node worker_threads",
+        "Includes a concrete analogy (e.g. chef / kitchen)",
+        "Closes with actionable payoff / search terms"
+      ]
+    }
+  ]
+}
