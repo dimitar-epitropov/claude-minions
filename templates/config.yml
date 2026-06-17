@@ -1,0 +1,39 @@
+# minions config — per-project workflow settings.
+# Read by every step skill and the guard hook. Created by /minions:init.
+# ~10 keys on purpose: small enough to hold in your head (see design §8).
+
+mode: maintain            # maintain | vibe
+                          #   maintain = contributing to an existing/mature project; docs near-static,
+                          #              architect defaults to "pattern scout", prose assumes you know the code.
+                          #   vibe     = greenfield you're shaping; docs are living, prose explains more.
+
+auto: off                 # off (default) = HITL: pause after every step, relay the result, suggest the
+                          #                 next step for you to launch.
+                          # on            = run the workflow's steps back-to-back.
+                          # Per-run override: pass --auto to any workflow.
+
+questions: regular        # none | few | regular | many — the specificator's interview budget.
+
+guard: soft               # off | soft | hard — the PreToolUse guard on code edits (design §9).
+                          #   soft = inject a steering reminder when you edit code outside a workflow.
+                          #   hard = deny the edit until a workflow is active.
+                          #   off  = silent.
+
+loops:                    # each loop: manual (default) | auto | off
+  plan_check: manual      #   manual = one checked pass per run, then you re-run for more.
+  review_fix: manual      #   auto   = the step loops up to max_iters with stall detection.
+  max_iters: 3            # iteration cap when a loop is auto.
+
+qa: on                    # on | off — run the separate QA pass after code.
+
+skills:                   # role -> skills the dispatch prompt orders that agent to consult & obey.
+                          # Empty by default. On work projects, list your mandatory packs here, e.g.:
+  coder: []               #   coder:     [java-stack:java-style, java-stack:java-testing]
+  reviewer: []            #   reviewer:  [java-stack:java-review]
+  architect: []           #   architect: []
+
+docs:
+  product: once           # once | living — vibe mode usually wants living.
+  tech: living            # once | living
+  knowledge: on           # on | off — whether reconcile emits CLAUDE.md / rules / skill suggestions
+                          # in RECONCILE.md. It never auto-applies them; you do (design §11.19).

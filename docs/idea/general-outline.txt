@@ -1,0 +1,90 @@
+I am building my claude-minions coding workflow/framework which is spec based. Below I list a lot of info for what I want to achieve. I also have some stuff existing but dont take them for granted they are a weak try to achieve what I described below. Assume the truth is here not there, but you can take some good ideas from there. I do not want you to implement the whole project. I want
+
+0) Do preliminary research
+1) Clear the details (maybe play like specificator)
+2) Do deep research
+3) Suggest how to build this. Iterate with feedback
+4) Document it
+5) Build the basics (we will guide together what to build)
+6) Extend bit by bit until it becomes a beast.
+
+Do not be afraid to push back, suggest best-practices, take ideas from other frameworks. I do not want to reinvent the wheel, but I also do not want to make this super bloated and heavy. I want a clear framework and skills/agents that I can easily use. My issue with GSD for instance is thaat we plan too much ahead and deviate, I have hard time navigating the MDs, They reference CR-01 DF-03 which I do not know by heart. If I have to use it in a work project it;s an overkill.
+
+# There are several workflows that I imagine:
+
+1. Start a new small feature (usually used on big work project where I just add something)
+-- That's usually in the maintain mode. I define a new small feature part of a a big project.
+-- I imgine it shall go through specificator -> architect (maybe in special mode not to design, but to find existing patterns and if new are introduced then to design) -> planner -> coder & QA -> verifier -> reviewer
+
+2. Commit to a feature
+-- This is when a feature is build and I want to make a small edit, fix a PR comment, etc.
+-- This is a bit trickier and might use a new agent. Quick, it guarantees keeping the documentation and other specific in place but does not go through the whole procedure. Just coder/qa/reviewer (maybe in some lite mode) Quick can have parameter --plan which adds planner and verifier. Again in --lite mode.
+
+3. Start a new vibe coded project
+-- Start a new vibe coded project. Here Brainstormer and specificator are used. But we have to extend for a more advanced flow to scope it good initially
+
+4. Work on backlog from vibe-coded project
+- Go through either brainstomer or straight to specificator (ask user maybe) -> arch -> planner -> coder & qa -> verifier -> reviewer
+
+5. Start refactoring - not suer yet how it shall differ
+ 
+6. Research - this is for doing a deep dive usually on vibe-coded project. Which tech to use, etc. I want to say just to use the research agent, but this benefit from more rigid flow for a more advanced research
+7. Inspect - inspect current implementation and give feedback. Usually used to evalute vibe coded projects and their state
+
+
+
+Write Plan -> Review Plan -> Implement Plan -> Verify Implementation
+
+
+# Specialized agents (brainstorm on top of my head) - some might be better as skills just throwing stuff
+
+- Manager - For managing the state and documentation - controling the whole workflow)
+- Brainstormer - takes a rough suggestion and aims to find good ways to implement. His job is to go wide rather than deep. Examines different possible ways to do something. Talks with the user gather data, finds best practices evaluates pros and cons. 
+- Specifacator - good at finding the gray areas and good at asking the right questions to elaborate an idea. Questions should be configurable (no/few/regular/many). Default is regular. His job is not to suggest but rather to fill in to find missing pieces that are crucial and can lead to issue if left vague. Goes deep
+- Architect - is able to pick out the best practices and design patterns to produce a suggestion on what the implementation shall be. Can summon the researcher. Suggest design patterns, librarires, abstractions. Doesn't go into detail but rather steers to ensure proper mechanisms are used. Goes through the code to see what is the current state and what is applicable but is not as deep as planner.
+- Researcher - makes in-depth research online. Can be used by various other agents and skills.
+- Planner - can use architects output to create a plan. The plan is actually rooted in the code and suggests specifics. The planer is good at two things. Being specific about implementation, splitting it deliverable parts
+- Coder - Implements the plan. Good at coding
+- Verifier - Receives the plan and checks the code. Good at finding discrepancies
+- QA - Good at writting tests based on the plan
+- Code Reviewer - reviews the code. Good at finding bad practices. (maybe it should be split into severl sub-agents for maing reviews focus on different aspects)
+---- Bug hunter
+---- Architect
+---- TypeScript/JAva reviewer
+---- ETC.
+- Extender - used to extend the framework, knows how it works, how to write appropriate skills, etc.
+- Debugger - adept at doing through debugging
+
+# Things to fix of current implementation:
+
+- It's assuming that each time we use it - we implement a project E2E. Sometimes I might just be using it to implement a feature for work.
+- I think it does not use any progressive disclosure.
+
+
+Goals:
+
+- I want to take some good practices for Getting Shit Done found at ~/Projects/get-shit-done but be spared for it's over-engineered framework that I get lost into pretty fast.
+- I want to take good practices from super-powers which are more staright-forwards but I want to have my own framework.
+- I want to develop the framework step-by-step so I kno-w it by heart. I do not want a big mastodont spit up in one that I cannot understand.
+- Skills are orcchestrators, agents are doers, skills also are used for progressive disclosure. USe rules
+- Use latest CLaude Code best practices, do your research.
+- Found out how to reference/incorporate project specific guidelines. For instance for my personal projects I have some, but for my work related we have a big list of java skils that are paramout for the projects we work on. There should be away to instruct the workflow to use specific set of skills I guess.
+- I imagine most agents to have --lite parameter. For instance imagine if the debug agent is very heavy maing hypothesis and verifying but I want to debug something quite straight forward but ** want to use the best practices without the ceremony ** I will use it in --lite mode. This is the keyword - keep guidelines/best-practices do not apply rigid ceremony
+- I imagine the workflow to maintain a good technical documentation and a good product regarding the project. The product documentation is more valuable if we are doing a whole project as we define it. If we do just features in a big mature project then the product documentation shall be generated once and more rarely updated as usually features are not that big that they actually change the idea of the project (e.g. adding a new endpoint or a new field is something that is documented by the code itself - the documentaton shoul contain just the actuall use-case of the project to give a general idea). Rather if we build a new project this documentation is very important as we currently shape nad guide it (maybe that shall be a setting of the workflow something like vibe (vibe is vibe code - e.g. quickly spining big project) vs. maintain (this is usually for work project that I just contribute to)). The tech documentation is more or less the same but maybe less affected by that setting (vibe vs. maintain). The idea of the technical documentation is to document, how we work with the repo, how we structure APIs, how we structure converters/mappers, what we abstract, which design patterns we use, etc. The idea is to keep the project coherent and extend that documentation as the project grows. This should happen auto (hook or skill or each agent/skill referencing a common skill that describes it explicitly - dunno).
+- I want MDs that are readable and easy to follow. When a project is vibe-coded and the llm assumes I know every detail and class name it gets hard as I don't. On the other hands I should know everything on my work projects. Additional just Human mds. are acceptable also if needed (do not bloat for the sake of)
+
+Must haves:
+
+1. We work agile. So we create plans step by steps so we do not have a long plan that becomes out of date after the first cycle.
+2. We update plans retrospectivaly when the reality change as we do not want to confuse the LLM for next iterations.
+3. Value progressive disclosure do not pollute context.
+4. Relly on hooks to enforce what we want as a must
+5. Have sepparate workflows for different tasks so I am not using a bazooka for few lines fix.
+6. I want to have a workflow guard that enforces the basic musts. What I mean is that no matter what I run in the project I run it with a skill and/or agent that even few lines addition would for instance update the documentation and run the verifier, or consult with styling skills, etc. So I want to not run directly commands and easiy drift. I want a cohesive system.
+7. I want the system to be spec based and used a rigid folder and md structure.
+8. I want to have a very clear documentation of the framework and how to use it.
+9. Have an easy way to upgrade the sill maybe trough a hook and a skill to write down feedback for improvement somewhere which can be incorporated in the skills later.
+10. Maintain CLAUDE.md for the project. Also maintaing skills for the projet as it shapes for how to work with it properly what are the specific for different layers (Controllers, Repos), what design patterns we have established. Should ask on CLAUE and skill-update every time.
+11. I want skills (and if applicable to agents) to have fixed parameters so they can work as parametrized scripts.
+12. Config file for the workflow so it can be configured differently per project. For instance I can let it be YOLO on one project, but require step by step verification on another
+13. I want an init skill/agent that creates the config file in a project
