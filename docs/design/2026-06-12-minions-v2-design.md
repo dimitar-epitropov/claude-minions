@@ -1,6 +1,6 @@
 # minions v2 — Framework Design
 
-**Date:** 2026-06-12 · **Status:** approved design, pre-implementation
+**Date:** 2026-06-12 · **Last revised:** 2026-06-17 · **Status:** approved design, pre-implementation
 **Supersedes:** the v1 loop (`01-pick … 06-reconcile`) — clean restructure, proven pieces ported.
 
 minions is a Claude Code plugin for **spec-driven development sized to the task**: a small,
@@ -25,9 +25,11 @@ resume anywhere. The owner can hold the whole framework in their head.
 - **No persona theater.** Agents are functions with one job, not characters. There is no
   "Manager" agent — the thin skills plus `STATE.md` are the manager.
 - **No plan-the-whole-project.** Plans are one feature deep, written when we know the most.
-- **No markdown sea.** Three files per feature, hard length caps, no document that exists to
-  reference another document.
-- **No mandatory ceremony.** Gates, question counts, loops, and the guard are config, not law.
+- **No markdown sea.** A small fixed set of capped files per feature; caps flag bloat (§7);
+  no document whose only job is to relay another's contents — TECH.md is the one deliberate,
+  capped exception, a thin index into native surfaces (§11.19).
+- **No mandatory ceremony.** Human-in-the-loop pausing (with `--auto` to skip it), question
+  counts, loops, and the guard are configurable, not law.
 
 ---
 
@@ -67,9 +69,9 @@ WORKFLOW SKILLS        /minions:feature  /minions:quick  /minions:project ...
        │                ≤ ~40 lines, zero domain logic
        ▼
 STEP SKILLS            /minions:specify  /minions:plan  /minions:code ...
-  step orchestrators    resolve config (gates/loops/depth/skill-packs)
+  step orchestrators    resolve config (auto/loops/depth/skill-packs)
        │                build self-contained dispatch prompt → dispatch agent(s)
-       │                own the loop (e.g. plan ⇄ check) and the gate
+       │                own the loop (e.g. plan ⇄ check) and the HITL pause
        │                ≤ ~80 lines, zero domain reasoning
        ▼
 AGENTS                 specificator, architect, planner, coder, qa, verifier ...
@@ -81,7 +83,7 @@ ARTIFACTS              docs/minions/** — the only memory that matters
 ```
 
 **Why a step-skill layer at all** (this is the one piece of GSD's command→workflow→agent
-stack we keep): loop logic and gate logic must live somewhere that is (a) shared across
+stack we keep): loop logic and pause logic must live somewhere that is (a) shared across
 workflows and (b) outside the agent — an agent cannot re-dispatch itself with fresh context,
 because subagents can't spawn subagents. The step skill is that home. `feature`, `quick`, and
 `project` all reuse the same `/minions:plan` step; improving planning is one edit.
@@ -133,8 +135,9 @@ judgment + stated criteria, not a numeric score.
    that's success, not laziness.
 3. **plan** → planner agent, then the **plan-check loop**: verifier (plan mode) reviews
    coverage/groundedness; criticals are fixed by re-dispatching the planner with the findings;
-   warnings append to PLAN.md `## Warnings`. Capped by `loops.plan_check` (default 1, max 3),
-   stall detection ends it early. Output `PLAN.md`: 2–7 tasks, each = one atomic commit + a
+   warnings append to PLAN.md `## Warnings`. Governed by `loops.plan_check` (§8): `manual`
+   (default) = one checked pass, then you re-run for more; `auto` = the step loops up to
+   `loops.max_iters` with stall-stop. Output `PLAN.md`: 2–7 tasks, each = one atomic commit + a
    runnable check + `covers: AC-n` back-refs.
 4. **code** → coder agent. Task-by-task, one commit per task, runs each task's check,
    deviation rules (§11.6) with every deviation logged into PLAN.md.
@@ -146,14 +149,23 @@ judgment + stated criteria, not a numeric score.
 7. **review** → reviewer agent, two-stage: spec-compliance first (built what was asked, nothing
    more), then code quality — where config skill packs fire (e.g. `java-stack:java-review`).
 8. **reconcile** → inline in the step skill (cheap, no agent): diff SPEC + ARCH against the
-   real `git diff`; update them to reality; propose TECH.md / CLAUDE.md / project-skill updates
-   (applied only after user approval); move the feature folder to `archive/`.
+   real `git diff` and update *those two* to reality (they're feature-local, disposable, about
+   to be archived — so reconcile edits them directly). Then **classify the durable learnings by
+   type and write them as suggestions** — reconcile does **not** edit any shared/native surface
+   itself. Output: `RECONCILE.md` in the feature folder, each suggestion tagged with its target
+   surface (§11.19) — area conventions → per-directory `CLAUDE.md` or path-scoped rule
+   (`.claude/rules/` + `paths:` glob, e.g. `**/controllers/**`), repeatable procedures → a
+   skill, cross-cutting non-negotiables → root `CLAUDE.md`, the *why* → DECISIONS.md, plus the
+   one-line TECH.md index pointer. **Applying these to the real files is a separate human step**
+   (a later extension may automate it). Finally move the feature folder — `RECONCILE.md`
+   included, as the record of what was proposed — to `archive/`.
 
-Gates between steps pause for the user per `gates:` config (§8).
+By default the workflow pauses after every step, relays the result, and suggests the next one
+for you to launch (§8); `--auto` runs the steps back-to-back.
 
 **`/minions:quick`:** scope check inline → coder (same skill packs, same atomic-commit rule) →
-reviewer single-stage → doc-touch (micro-reconcile: TECH.md/CLAUDE.md *if* the change warrants,
-ask first). `--plan` inserts plan before code and verify after. No SPEC, no feature folder —
+reviewer single-stage → doc-touch (micro-reconcile: propose a `CLAUDE.md`/rule update *if* the
+change warrants, ask first). `--plan` inserts plan before code and verify after. No SPEC, no feature folder —
 discipline without paperwork.
 
 ---
@@ -162,19 +174,19 @@ discipline without paperwork.
 
 Common contract for every step skill: read `STATE.md` + `config.yml` → resolve knobs → build a
 **self-contained dispatch prompt** (feature folder path, mode, question budget, role skill-pack,
-exact artifacts to read — the agent never hunts) → dispatch → loop if configured → gate if
-configured → relay the agent's `Result/Summary/Next` → done.
+exact artifacts to read — the agent never hunts) → dispatch → loop per `loops.*` mode → pause
+for your review (unless `--auto`) → relay the agent's `Result/Summary/Next` → done.
 
 | Step skill | Agent(s) | Reads | Writes | Loop | Notes |
 |---|---|---|---|---|---|
 | `specify` | specificator | request, codebase (light), PRODUCT/TECH | SPEC.md | — | question budget from config |
 | `architect` | architect (→ researcher) | SPEC, codebase, TECH | ARCH.md | — | mode: scout (default in maintain) / design |
-| `plan` | planner ⇄ verifier(plan) | SPEC, ARCH, codebase | PLAN.md | `loops.plan_check` | criticals fixed, warnings logged, stall-stop |
+| `plan` | planner ⇄ verifier(plan) | SPEC, ARCH, codebase | PLAN.md | `loops.plan_check` | auto: fix up to max_iters, stall-stop; manual (default): one pass, fix-when-certain, rest → findings/open questions |
 | `code` | coder | PLAN (self-contained) | code, commits, PLAN deviations | — | one task = one commit |
 | `qa` | qa | SPEC ACs, diff, tests | tests, commits | — | can be disabled per config |
 | `verify` | verifier (code) | SPEC, PLAN, codebase | PLAN `## Verification` | — | adversarial, AC-by-AC |
-| `review` | reviewer | SPEC, diff | review notes → fixes via coder | `loops.review_fix` | stage 1 spec-compliance, stage 2 quality |
-| `reconcile` | — (inline) | SPEC, ARCH, git diff | SPEC/ARCH updates, TECH/CLAUDE proposals, archive | — | CLAUDE.md & skills: always ask first |
+| `review` | reviewer | SPEC, diff | review notes → fixes via coder | `loops.review_fix` | stage 1 spec-compliance, stage 2 quality; manual/auto like `plan_check` |
+| `reconcile` | — (inline) | SPEC, ARCH, git diff | SPEC/ARCH updated to reality; **RECONCILE.md** = knowledge suggestions tagged by target surface (per-dir CLAUDE.md / `.claude/rules/` / skills / root CLAUDE.md / DECISIONS.md / TECH.md); archive | — | suggests only — human applies shared-surface writes (§11.19) |
 
 ---
 
@@ -221,8 +233,9 @@ docs/minions/                     ← root configurable; gitignore-able on work 
   STATE.md                        where are we — tiny digest, never an archive
   PRODUCT.md                      what/why for humans-who-forgot (rich in vibe mode,
                                   near-static in maintain mode)
-  TECH.md                         living conventions: layers, patterns, structures, "how we
-                                  do X here" — every line earned by a real incident
+  TECH.md                         thin index + pointers: layers, and where each area's
+                                  conventions live (per-dir CLAUDE.md / .claude/rules/) — the
+                                  content lives on native surfaces, not here (§11.19)
   DECISIONS.md                    append-only: date | decision | why
   feedback.md                     framework gripes, captured in the moment
   features/
@@ -231,18 +244,33 @@ docs/minions/                     ← root configurable; gitignore-able on work 
       ARCH.md                     patterns to follow (paths) · new elements · libraries
       PLAN.md                     tasks (do/check/commit/covers) · warnings · deviations ·
                                   verification — the feature's single running record
+      RECONCILE.md                reconcile's knowledge suggestions, tagged by target surface
+                                  (written last; applied to real files by the human)
     archive/
       012-export-rate-limit/     moved here by reconcile
 ```
 
-**Hard caps:** SPEC ≤120 lines, ARCH ≤80, PLAN ≤200, STATE ≤40, TECH ≤150. Over cap = the
-content belongs elsewhere or doesn't belong at all. Caps are what prevent the markdown sea
-(§11, failure mode 1).
+**Caps:** SPEC ≤150 lines, ARCH ≤150, PLAN ≤400, STATE ≤40, TECH ≤150; PRODUCT uncapped. These
+are **soft targets, not hard stops** — going over is a *smell* (the content may belong on a
+native surface per §11.19, or not at all), not a wall the agent hits mid-task. Their job is to
+fend off the markdown sea (§11, failure mode 1) without strangling a genuinely complex feature.
 
 **ID scope:** `AC-n` and `T-n` are meaningful only inside their feature folder. Nothing outside
 the folder ever references them. This keeps Kiro-style traceability (task `covers: AC-2`,
 verifier checks AC-2) while killing the GSD experience of meeting `CR-01` in a file far from
 its definition.
+
+**Knowledge placement:** durable repo knowledge does *not* live in `docs/minions/` — that tree
+is minions-private (only dispatched agents read it, and only when ordered to). Conventions meant
+to help *every* Claude session — including plain edits and teammates not running a workflow —
+live on Claude Code's native progressive-disclosure surfaces: root `CLAUDE.md` (always on, kept
+tiny — conventions that vary from defaults only), per-directory `CLAUDE.md` and `.claude/rules/`
+path-scoped rules (load only when Claude touches matching files — this is where area specifics
+like "controller conventions" go, scoped `**/controllers/**`), and skills (load on task match).
+TECH.md is the *index* into those surfaces, not a second copy of them; ARCH.md is feature-scoped
+and archived, never a home for durable knowledge. reconcile is the producer that *proposes*
+writes to those surfaces — as tagged suggestions in `RECONCILE.md`, applied by you, never by the
+step itself (§4 step 8, §11.19).
 
 **Writing style:** artifacts are written for a reader who does *not* know every class name
 (vibe mode) or who knows the codebase well (maintain mode) — the specificator and planner adapt
@@ -261,12 +289,14 @@ file at repo root (`path: tools/minions` or `disabled`). Hooks and skills check 
 
 ```yaml
 mode: maintain            # maintain | vibe — adapts doc richness, architect default, prose style
-gates: [plan, reconcile]  # all | none | [step,...] — where the workflow pauses for you
+auto: off                 # off (default) = HITL: pause after every step, relay the result,
+                          # suggest the next step. on = run steps back-to-back. Per-run: --auto
 questions: regular        # none | few | regular | many — specificator interview budget
 guard: soft               # off | soft | hard — see §9
-loops:
-  plan_check: 1           # 0–3 plan⇄verify iterations
-  review_fix: 1           # 0–2 review⇄fix iterations
+loops:                    # each: manual (default) | auto | off
+  plan_check: manual      # manual = one checked pass per run; auto = step loops up to max_iters
+  review_fix: manual      # manual = fix-when-certain + document the rest; you re-run for more
+  max_iters: 3            # iteration cap when a loop is auto; stall detection ends early
 qa: on                    # on | off — separate QA pass after code
 skills:                   # role → skills the dispatch prompt orders the agent to consult
   coder: [java-stack:java-style, java-stack:java-testing]
@@ -275,12 +305,28 @@ skills:                   # role → skills the dispatch prompt orders the agent
 docs:
   product: once           # once | living — vibe mode wants living
   tech: living
-  claude_md: ask          # ask | off — reconcile proposes CLAUDE.md/skill updates
+  knowledge: on           # on | off — whether reconcile emits CLAUDE.md/rules/skill
+                          # suggestions in RECONCILE.md (it never auto-applies them)
 ```
 
-Per-invocation flags override config: `/minions:feature "..." --questions=few --gates=none`.
-Skills declare fixed parameters via the `arguments:` frontmatter field so they behave like
-parametrized scripts (must-have #11).
+Per-invocation flags override config: `/minions:feature "..." --questions=few --auto`.
+`--auto` runs the whole workflow hands-off; scope it to one loop with `--review=auto` /
+`--plan-check=auto`. Skills declare fixed parameters via the `arguments:` frontmatter field so
+they behave like parametrized scripts (must-have #11).
+
+**HITL by default.** Workflows are human-in-the-loop. After each step the workflow skill relays
+the agent's `Result/Summary/Next`, surfaces the artifact (brief, plan, diff), and **stops** —
+you review it and tell it to proceed; the workflow already knows the next step and which
+skill/agent runs it. `--auto` (or `auto: on`) removes the pauses for a hands-off run. This is
+why there is no `gates:` list: pausing isn't a per-step setting to curate, it's the default, and
+`--auto` is the single escape hatch (§11.15).
+
+**Manual vs auto loops.** A loop in `manual` mode (default) does **one pass per invocation**:
+the reviewer/verifier fixes only what it is *certain* about and documents the rest as findings
+and open questions in PLAN.md — then stops. You read them and re-run the step, often in a fresh
+session, for the next iteration. `auto` hands the loop to the step skill, which re-dispatches
+fixes up to `loops.max_iters` with stall detection (§11.13). Manual keeps you between
+iterations; auto trades that for momentum.
 
 **Skill packs** are the Agent OS conditional-injection idea (§11.17): the step skill copies the
 role's list into the dispatch prompt as *"before working, invoke these skills and obey them"*.
@@ -414,9 +460,10 @@ PR; periodic snapshot passes rewrite stale specs. The genre's verdict: framework
 reconcile step accumulate lies that poison future LLM context.
 **Why it works:** it makes the *change* documentation disposable and the *system* documentation
 durable — matching how knowledge actually ages.
-**Here:** the reconcile step (§4 step 8): SPEC/ARCH updated to the real diff, durable learnings
-promoted to TECH.md/DECISIONS.md, folder archived. Full delta-merge into a `specs/` tree is a
-candidate later extension once TECH.md outgrows itself.
+**Here:** the reconcile step (§4 step 8): SPEC/ARCH updated to the real diff; durable learnings
+emitted as tagged suggestions in `RECONCILE.md` for the native surfaces / DECISIONS.md (applied
+by the human), folder archived. Full delta-merge into a `specs/` tree is a candidate later
+extension once the native surfaces outgrow a flat layout.
 
 ### 11.10 Tiered workflows with upgrade signals — *gap in the field; nearest priors: Kiro, Taskmaster*
 **There:** Kiro's only right-sizing is a binary vibe-vs-spec mode (its existence is an
@@ -456,9 +503,10 @@ truncation); these patterns are tested countermeasures, not style preferences.
 escalate early instead of burning the remaining budget.
 **Why it works:** one round of independent checking catches real gaps cheaply; unbounded loops
 churn; the cap + stall rule converts "iterate until good" into a terminating algorithm.
-**Here:** `loops.plan_check` and `loops.review_fix` (§8), defaulting to 1 — research showed
-GSD's habitual 3 is usually paying for marginal gains. Criticals block, warnings are recorded
-and move on.
+**Here:** `loops.plan_check` and `loops.review_fix` (§8) default to `manual` — one checked pass,
+then you decide — because the HITL default (§8) already puts a reviewer (you) between iterations.
+`auto` runs up to `loops.max_iters` (default 3, GSD's habitual count) with stall-stop for
+hands-off runs. Criticals block; warnings and open questions are recorded and move on.
 
 ### 11.14 Self-contained work units — *from BMAD story files*
 **There:** the Scrum Master compiles each story with *all* the architecture/PRD context the dev
@@ -470,12 +518,15 @@ where it's paid once.
 **Here:** PLAN.md is written to be executed alone; step skills build self-contained dispatch
 prompts (§5).
 
-### 11.15 Lean per-project config with gates — *from GSD's config.json, inverted*
-**There:** 100+ keys, interactive-vs-yolo gates, model profiles, per-agent overrides — powerful
-and unholdable.
-**Why gates work:** trust differs per project; the same human wants YOLO on a toy and
-checkpoints at work. Making pause-points data instead of doctrine lets one framework serve both.
-**Here:** §8 — the gates idea kept, the surface cut to ~10 keys.
+### 11.15 Lean per-project config; HITL by default, one `--auto` escape — *from GSD's config.json + interactive-vs-yolo, inverted*
+**There:** 100+ keys, an interactive-vs-yolo switch, per-step gate lists, model profiles,
+per-agent overrides — powerful and unholdable.
+**Why it works:** trust differs per project *and* per task; the same human wants hands-off on a
+toy and a checkpoint at every step at work.
+**Here:** §8 — kept the insight, dropped the per-step `gates:` list (curating which steps pause
+is itself the ceremony this framework avoids). Workflows are **human-in-the-loop by default** —
+every step pauses, relays, and suggests the next — with a single `--auto` flag (whole-workflow,
+or scoped to a loop) as the one escape hatch. Config stays ~10 keys.
 
 ### 11.16 Steering hooks over blocking hooks — *Claude Code 2026 platform patterns*
 **There:** hooks now support `additionalContext` injection (docs: "factual, not imperative"),
@@ -504,6 +555,28 @@ observed failures* (not imagined ones) is the only way edits make agents better,
 **Here:** `/minions:feedback` captures friction the moment it occurs; the extender agent later
 turns `feedback.md` into eval cases and skill edits (roadmap step 6).
 
+### 11.19 Native progressive-disclosure surfaces as the knowledge store — *from Claude Code 2026 large-codebase guidance*
+**There:** Anthropic's large-codebase guide prescribes a four-surface split: root CLAUDE.md
+(always loaded — keep it to conventions that vary from defaults, <300 lines; HumanLayer runs
+<60), per-directory CLAUDE.md (loads on demand when Claude reads files in that dir),
+path-scoped rules in `.claude/rules/` with a `paths:` glob (load when a matching file is
+touched), and skills (load on task match). Field consensus (HumanLayer, sshh.io): **pointers,
+not copies** — never `@`-embed a large doc into CLAUDE.md, because it then costs context every
+turn; name the path and pitch *when* it matters instead.
+**Why it works:** always-loaded instruction budget is scarce (~20k-token baseline before the
+first prompt) and bloated rule files get uniformly down-weighted (§11.11). On-demand surfaces
+keep each session's context sharp while still making the whole repo's knowledge reachable — the
+per-directory and path-scoped surfaces answer "controller specifics" without a single file that
+bloats.
+**Here:** reconcile classifies durable learnings by the surface that loads them at the right
+time (§4 step 8) and emits them as tagged suggestions in `RECONCILE.md` — the human applies
+them, so the always-loaded surfaces only ever change by a deliberate hand, never as a silent
+side effect of a workflow. This is the non-minions-specific carrier for
+repo knowledge — a teammate doing a plain edit benefits without ever running a workflow. TECH.md
+stays a thin index (§7); ARCH.md remains feature-scoped and archived. Distinct from §11.17:
+role-scoped skill *packs* are minions' dispatch-time injection; this is about where repo truth
+*persists* between sessions.
+
 ### Explicitly rejected (and from whom)
 - **Global requirement/decision ID registries** (GSD `REQ-001`/`D-01`, spec-kit FR-numbers):
   ceremony that created the navigation pain this framework exists to escape.
@@ -527,7 +600,7 @@ turns `feedback.md` into eval cases and skill edits (roadmap step 6).
 2. **The spine:** `/minions:feature` + step skills `specify`/`plan`/`code`/`verify` + agents
    specificator, planner, coder, verifier (+ all 11 agent files created, dormant ones thin).
 3. **Close the loop:** `architect` + `qa` + `review` steps wired; reconcile inline; plan-check
-   loop on.
+   loop wired (manual default).
 4. **Guard:** the two hooks (§9), soft mode.
 5. **`/minions:quick`.**
 
@@ -548,3 +621,7 @@ proves shallow → evals harness via skill-creator → extender agent → `/mini
   greenfield. Design when we get there.
 - Whether `quick` should auto-detect "you're editing an archived feature" and offer to reopen
   its folder.
+- Should `--auto` also lower the interaction budget (e.g. imply `questions=few`), or stay
+  orthogonal to `questions`/`guard`? Currently orthogonal.
+- Where do unapplied `RECONCILE.md` suggestions go after archive? Fine buried for v1; a running
+  `docs/minions/knowledge-inbox.md` that survives archival is the natural later fix.
