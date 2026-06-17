@@ -1,7 +1,6 @@
 {
   "name": "minions",
   "description": "Spec-driven development sized to the task — tiered workflows of thin skills that dispatch focused agents, with state on disk.",
-  "version": "1.0.0",
   "author": {
     "name": "Dimitar Epitropov"
   }
