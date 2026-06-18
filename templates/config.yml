@@ -6,10 +6,10 @@ mode: maintain            # maintain | vibe — the main axis. NOT about project
                           # established, documented conventions already exist.
                           #   maintain = the project already has a rulebook to comply with (company skills,
                           #              house patterns, prior docs). Agents conform; architect "scouts" the
-                          #              existing pattern; reconcile mostly verifies + suggests undocumented
+                          #              existing pattern; the framework mostly verifies + records undocumented
                           #              gaps; prose assumes you know the code.
                           #   vibe     = no rulebook yet — greenfield OR a standalone/side project you're
-                          #              shaping. The framework actively BUILDS conventions: reconcile records
+                          #              shaping. The framework actively BUILDS conventions: it records
                           #              styling/patterns/arch choices so future features follow them; architect
                           #              leans "design"; docs are living; prose explains more.
 
@@ -41,7 +41,7 @@ skills:                   # role -> skills the dispatch prompt orders that agent
 docs:
   product: once           # once | living — vibe mode usually wants living.
   tech: living            # once | living
-  knowledge: on           # on | off — master switch for reconcile's CLAUDE.md / rules / skill
-                          # suggestions in RECONCILE.md. Never auto-applied; you apply them (§11.19).
-                          # The *style* follows mode: vibe builds new conventions, maintain suggests
-                          # only undocumented gaps. Set off for throwaway prototypes.
+  knowledge: on           # on | off — master switch for the durable-knowledge layer: conventions,
+                          # patterns, and tech facts recorded onto CLAUDE.md / .claude/rules / skills
+                          # (§11.19). The *style* follows mode: vibe builds new conventions, maintain
+                          # records only undocumented gaps. Set off for throwaway prototypes.

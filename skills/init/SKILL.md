@@ -32,8 +32,8 @@ Ask with `AskUserQuestion` (these become `config.yml`):
 
 1. **Mode** — the key question, framed by whether a rulebook already exists (not project age):
    `maintain` (the project already has established, documented conventions to comply with —
-   company skills, house patterns, prior docs; architect scouts and follows them, reconcile mostly
-   suggests undocumented gaps) or `vibe` (no rulebook yet — greenfield *or* a standalone/side
+   company skills, house patterns, prior docs; architect scouts and follows them, the framework
+   mostly records undocumented gaps) or `vibe` (no rulebook yet — greenfield *or* a standalone/side
    project you're shaping; the framework actively builds & records conventions, docs are living).
    If the user passed `$0` (`maintain`/`vibe`), skip this question and use it.
 2. **Guard** — how strictly to stop code edits made outside a minions workflow: `soft`
