@@ -2,10 +2,16 @@
 # Read by every step skill and the guard hook. Created by /minions:init.
 # ~10 keys on purpose: small enough to hold in your head (see design §8).
 
-mode: maintain            # maintain | vibe
-                          #   maintain = contributing to an existing/mature project; docs near-static,
-                          #              architect defaults to "pattern scout", prose assumes you know the code.
-                          #   vibe     = greenfield you're shaping; docs are living, prose explains more.
+mode: maintain            # maintain | vibe — the main axis. NOT about project age, but about whether
+                          # established, documented conventions already exist.
+                          #   maintain = the project already has a rulebook to comply with (company skills,
+                          #              house patterns, prior docs). Agents conform; architect "scouts" the
+                          #              existing pattern; reconcile mostly verifies + suggests undocumented
+                          #              gaps; prose assumes you know the code.
+                          #   vibe     = no rulebook yet — greenfield OR a standalone/side project you're
+                          #              shaping. The framework actively BUILDS conventions: reconcile records
+                          #              styling/patterns/arch choices so future features follow them; architect
+                          #              leans "design"; docs are living; prose explains more.
 
 auto: off                 # off (default) = HITL: pause after every step, relay the result, suggest the
                           #                 next step for you to launch.
@@ -35,5 +41,7 @@ skills:                   # role -> skills the dispatch prompt orders that agent
 docs:
   product: once           # once | living — vibe mode usually wants living.
   tech: living            # once | living
-  knowledge: on           # on | off — whether reconcile emits CLAUDE.md / rules / skill suggestions
-                          # in RECONCILE.md. It never auto-applies them; you do (design §11.19).
+  knowledge: on           # on | off — master switch for reconcile's CLAUDE.md / rules / skill
+                          # suggestions in RECONCILE.md. Never auto-applied; you apply them (§11.19).
+                          # The *style* follows mode: vibe builds new conventions, maintain suggests
+                          # only undocumented gaps. Set off for throwaway prototypes.

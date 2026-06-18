@@ -288,7 +288,9 @@ file at repo root (`path: tools/minions` or `disabled`). Hooks and skills check 
 ~10 keys, not 100 (GSD's config has 100+; nobody can hold that).
 
 ```yaml
-mode: maintain            # maintain | vibe — adapts doc richness, architect default, prose style
+mode: maintain            # maintain | vibe — does this project already have established, documented
+                          # conventions you comply with (maintain), or are you still establishing
+                          # them (vibe)? Drives knowledge behavior, architect default, prose, docs.
 auto: off                 # off (default) = HITL: pause after every step, relay the result,
                           # suggest the next step. on = run steps back-to-back. Per-run: --auto
 questions: regular        # none | few | regular | many — specificator interview budget
@@ -305,8 +307,9 @@ skills:                   # role → skills the dispatch prompt orders the agent
 docs:
   product: once           # once | living — vibe mode wants living
   tech: living
-  knowledge: on           # on | off — whether reconcile emits CLAUDE.md/rules/skill
-                          # suggestions in RECONCILE.md (it never auto-applies them)
+  knowledge: on           # on | off — master switch for reconcile's CLAUDE.md/rules/skill
+                          # suggestions in RECONCILE.md (it never auto-applies them). The *style*
+                          # of those suggestions is mode-derived (see "Modes" below), not a key.
 ```
 
 Per-invocation flags override config: `/minions:feature "..." --questions=few --auto`.
@@ -331,6 +334,27 @@ iterations; auto trades that for momentum.
 **Skill packs** are the Agent OS conditional-injection idea (§11.17): the step skill copies the
 role's list into the dispatch prompt as *"before working, invoke these skills and obey them"*.
 Per-project, explicit, no autodetection magic.
+
+**Modes.** `mode` is the framework's main axis, and it is *not* about a project's age — it's about
+whether established, documented conventions already exist. A brand-new microservice inside a work
+monorepo with company skills and house patterns is `maintain`; a months-old solo side project with
+no rulebook is `vibe`. Greenfield is just one case of `vibe`.
+
+The two modes are mirror images on the **knowledge** axis (this is why knowledge style is derived
+from mode, not a separate key):
+
+- **maintain → comply.** Conventions live elsewhere already (company skills, existing patterns,
+  prior docs). Agents *conform* to them; the architect defaults to **scout** (find and follow the
+  existing pattern); reconcile mostly verifies compliance and only *suggests* where it spots an
+  **undocumented** pattern or a needed edit. `docs.product: once`, `docs.tech: living` but thin.
+- **vibe → establish.** No rulebook exists yet, so the framework actively *builds* one: reconcile
+  proposes styling guides, dev patterns, arch choices, and abstractions onto the native surfaces
+  (§11.19) so feature #7 follows feature #3 instead of reinventing it; the architect leans
+  **design**; prose explains more (you don't know every class name). `docs.product: living`.
+
+Both still route durable knowledge to the native surfaces and still require human approval to
+apply it (§11.19) — `vibe` just *generates* more of it and `maintain` *defers* to what's there.
+`docs.knowledge: off` silences recording in either mode (e.g. a throwaway prototype).
 
 ---
 
