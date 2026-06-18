@@ -1,6 +1,6 @@
 # minions v2 — Framework Design
 
-**Date:** 2026-06-12 · **Last revised:** 2026-06-17 · **Status:** approved design, pre-implementation
+**Date:** 2026-06-12 · **Last revised:** 2026-06-18 · **Status:** approved design, pre-implementation
 **Supersedes:** the v1 loop (`01-pick … 06-reconcile`) — clean restructure, proven pieces ported.
 
 minions is a Claude Code plugin for **spec-driven development sized to the task**: a small,
@@ -112,7 +112,7 @@ enforcement therefore lives exclusively in plugin-level `hooks/hooks.json`.
 | Tier | Skill | Steps | Use it for |
 |---|---|---|---|
 | Quick | `/minions:quick` | (plan*) → code → review-lite → doc-touch (* with `--plan`: + verify) | PR comments, small edits, follow-ups to a built feature |
-| Standard | `/minions:feature` | specify → architect → plan → code → qa → verify → review → reconcile | a normal feature on an existing project |
+| Standard | `/minions:feature` | specify → architect → plan → code → qa → verify → review → reconcile → curate | a normal feature on an existing project |
 | Project | `/minions:project` | brainstorm → scope → PRODUCT/TECH bootstrap → loops `/minions:feature` per backlog item | greenfield vibe-coded project *(built in step 6)* |
 | — | `/minions:debug` | hypothesis loop via debugger agent | bugs *(later)* |
 | — | `/minions:research` | structured deep-dive via researcher agent | tech choices, deep dives *(later)* |
@@ -150,15 +150,15 @@ judgment + stated criteria, not a numeric score.
    more), then code quality — where config skill packs fire (e.g. `java-stack:java-review`).
 8. **reconcile** → inline in the step skill (cheap, no agent): diff SPEC + ARCH against the
    real `git diff` and update *those two* to reality (they're feature-local, disposable, about
-   to be archived — so reconcile edits them directly). Then **classify the durable learnings by
-   type and write them as suggestions** — reconcile does **not** edit any shared/native surface
-   itself. Output: `RECONCILE.md` in the feature folder, each suggestion tagged with its target
-   surface (§11.19) — area conventions → per-directory `CLAUDE.md` or path-scoped rule
-   (`.claude/rules/` + `paths:` glob, e.g. `**/controllers/**`), repeatable procedures → a
-   skill, cross-cutting non-negotiables → root `CLAUDE.md`, the *why* → DECISIONS.md, plus the
-   one-line TECH.md index pointer. **Applying these to the real files is a separate human step**
-   (a later extension may automate it). Finally move the feature folder — `RECONCILE.md`
-   included, as the record of what was proposed — to `archive/`.
+   to be archived — so reconcile edits them directly). Then hand off to `curate` — reconcile no
+   longer emits knowledge suggestions and no longer archives (both moved to the curator).
+9. **curate** → curator agent (the knowledge librarian). Owns the entire durable-knowledge layer:
+   classifies each durable learning by *trigger type* and routes it to the surface that loads it at
+   the right moment (§11.19), refreshes structural facts from source and promotes recurring
+   conventions past a support threshold (default 3), writes the edits (`apply: review` pauses for
+   approval, `auto` commits; root `CLAUDE.md` always gated), updates the cross-feature
+   `knowledge-ledger.md`, and finally archives the feature folder. Full mechanism:
+   `2026-06-18-knowledge-curator-design.md`.
 
 By default the workflow pauses after every step, relays the result, and suggests the next one
 for you to launch (§8); `--auto` runs the steps back-to-back.
@@ -186,13 +186,14 @@ for your review (unless `--auto`) → relay the agent's `Result/Summary/Next` �
 | `qa` | qa | SPEC ACs, diff, tests | tests, commits | — | can be disabled per config |
 | `verify` | verifier (code) | SPEC, PLAN, codebase | PLAN `## Verification` | — | adversarial, AC-by-AC |
 | `review` | reviewer | SPEC, diff | review notes → fixes via coder | `loops.review_fix` | stage 1 spec-compliance, stage 2 quality; manual/auto like `plan_check` |
-| `reconcile` | — (inline) | SPEC, ARCH, git diff | SPEC/ARCH updated to reality; **RECONCILE.md** = knowledge suggestions tagged by target surface (per-dir CLAUDE.md / `.claude/rules/` / skills / root CLAUDE.md / DECISIONS.md / TECH.md); archive | — | suggests only — human applies shared-surface writes (§11.19) |
+| `reconcile` | — (inline) | SPEC, ARCH, git diff | SPEC/ARCH updated to reality; hands off to `curate` | — | no longer emits suggestions or archives (moved to curator) |
+| `curate` | curator | git diff, SPEC/ARCH, existing skillset, ledger | skills / per-dir CLAUDE.md / `.claude/rules/` / root CLAUDE.md / DECISIONS.md; `knowledge-ledger.md`; `CURATE.md`; archives folder | — | owns durable knowledge; structural = refresh-from-source, convention = evidence threshold; `apply: review\|auto` |
 
 ---
 
 ## 6. Agent roster
 
-All eleven are defined from day one — thin, one job each, boundaries locked before habits form.
+All twelve are defined from day one — thin, one job each, boundaries locked before habits form.
 Dormant agents (no workflow yet) are marked ◌.
 
 | Agent | One job | Key inputs → outputs | Fixed params |
@@ -205,6 +206,7 @@ Dormant agents (no workflow yet) are marked ◌.
 | qa | tests that prove the ACs | SPEC, diff → test commits | — |
 | verifier | find discrepancies between promise and reality | SPEC+PLAN (+code) → verdicts | `mode: plan\|code` |
 | reviewer | two-stage review: compliance, then quality | SPEC, diff → findings | `stage: spec\|quality\|both`, `lite` |
+| curator | keep the project's durable knowledge true to the code | diff, SPEC/ARCH, skillset, ledger → skills/CLAUDE.md/rules/DECISIONS edits + ledger | `apply: review\|auto` |
 | ◌ brainstormer | go wide: options, trade-offs, best practices | idea → options brief | — |
 | ◌ debugger | hypothesis-driven debugging | symptom → root cause | `lite` |
 | ◌ extender | improve minions itself; knows §10 conventions + feedback.md | feedback → skill/agent edits | — |
@@ -238,16 +240,18 @@ docs/minions/                     ← root configurable; gitignore-able on work 
                                   content lives on native surfaces, not here (§11.19)
   DECISIONS.md                    append-only: date | decision | why
   feedback.md                     framework gripes, captured in the moment
+  knowledge-ledger.md             curator's cross-feature evidence: candidate conventions +
+                                  observation counts; survives archive (§13 resolved)
   features/
     012-export-rate-limit/
       SPEC.md                     goal · AC-1..AC-n (WHEN…SHALL…) · clarifications · out-of-scope
       ARCH.md                     patterns to follow (paths) · new elements · libraries
       PLAN.md                     tasks (do/check/commit/covers) · warnings · deviations ·
                                   verification — the feature's single running record
-      RECONCILE.md                reconcile's knowledge suggestions, tagged by target surface
-                                  (written last; applied to real files by the human)
+      CURATE.md                   curator's run summary: promotions, refreshes, flags, ledger
+                                  deltas (written last; the per-feature record of what changed)
     archive/
-      012-export-rate-limit/     moved here by reconcile
+      012-export-rate-limit/     moved here by curate
 ```
 
 **Caps:** SPEC ≤150 lines, ARCH ≤150, PLAN ≤400, STATE ≤40, TECH ≤150; PRODUCT uncapped. These
@@ -307,9 +311,17 @@ skills:                   # role → skills the dispatch prompt orders the agent
 docs:
   product: once           # once | living — vibe mode wants living
   tech: living
-  knowledge: on           # on | off — master switch for reconcile's CLAUDE.md/rules/skill
-                          # suggestions in RECONCILE.md (it never auto-applies them). The *style*
-                          # of those suggestions is mode-derived (see "Modes" below), not a key.
+  knowledge: on           # on | off — master switch for the curator (see curate: below). off =
+                          # no durable-knowledge updates at all (throwaway prototype).
+curate:                   # the knowledge curator (2026-06-18-knowledge-curator-design.md)
+  apply: review           # review (HITL default, pause for approval) | auto (commit directly;
+                          # root CLAUDE.md still gated even under auto)
+  promote_threshold: 3    # a convention must recur in N features before it becomes a written rule
+  path: .claude/skills    # native surface for project skills
+  cap_lines: 150          # soft cap per skill
+  skills:
+    structural: [tech-stack, architecture]                       # refreshed from source each feature
+    convention: [code-style, design-patterns, testing, logging]  # evidence → threshold → rule
 ```
 
 Per-invocation flags override config: `/minions:feature "..." --questions=few --auto`.
@@ -484,10 +496,10 @@ PR; periodic snapshot passes rewrite stale specs. The genre's verdict: framework
 reconcile step accumulate lies that poison future LLM context.
 **Why it works:** it makes the *change* documentation disposable and the *system* documentation
 durable — matching how knowledge actually ages.
-**Here:** the reconcile step (§4 step 8): SPEC/ARCH updated to the real diff; durable learnings
-emitted as tagged suggestions in `RECONCILE.md` for the native surfaces / DECISIONS.md (applied
-by the human), folder archived. Full delta-merge into a `specs/` tree is a candidate later
-extension once the native surfaces outgrow a flat layout.
+**Here:** the reconcile step (§4 step 8) updates SPEC/ARCH to the real diff; the **curate** step
+(§4 step 9, curator agent) then folds durable learnings onto the native surfaces / DECISIONS.md and
+archives. Full delta-merge into a `specs/` tree is a candidate later extension once the native
+surfaces outgrow a flat layout.
 
 ### 11.10 Tiered workflows with upgrade signals — *gap in the field; nearest priors: Kiro, Taskmaster*
 **There:** Kiro's only right-sizing is a binary vibe-vs-spec mode (its existence is an
@@ -592,14 +604,17 @@ first prompt) and bloated rule files get uniformly down-weighted (§11.11). On-d
 keep each session's context sharp while still making the whole repo's knowledge reachable — the
 per-directory and path-scoped surfaces answer "controller specifics" without a single file that
 bloats.
-**Here:** reconcile classifies durable learnings by the surface that loads them at the right
-time (§4 step 8) and emits them as tagged suggestions in `RECONCILE.md` — the human applies
-them, so the always-loaded surfaces only ever change by a deliberate hand, never as a silent
-side effect of a workflow. This is the non-minions-specific carrier for
-repo knowledge — a teammate doing a plain edit benefits without ever running a workflow. TECH.md
-stays a thin index (§7); ARCH.md remains feature-scoped and archived. Distinct from §11.17:
-role-scoped skill *packs* are minions' dispatch-time injection; this is about where repo truth
-*persists* between sessions.
+**Here:** the **curator** agent (§6, the `curate` step §4 step 9) classifies each durable learning
+by *trigger type* — what loads it at the right moment: a *task/intent* → a skill (the dominant
+surface), *touching a directory* → per-dir `CLAUDE.md`, *touching a glob* → `.claude/rules/` +
+`paths:`, *every turn* → root `CLAUDE.md`, the *why* → DECISIONS.md. It then writes the edits
+(structural facts refreshed from source, conventions promoted past a threshold) under
+`apply: review|auto`, with root `CLAUDE.md` always human-gated — so the always-loaded surfaces never
+change as a silent side effect. This is the non-minions-specific carrier for repo knowledge — a
+teammate doing a plain edit benefits without ever running a workflow. TECH.md stays a thin index
+(§7); ARCH.md remains feature-scoped and archived. Distinct from §11.17: role-scoped skill *packs*
+are minions' dispatch-time injection; this is about where repo truth *persists* between sessions.
+Full mechanism: `2026-06-18-knowledge-curator-design.md`.
 
 ### Explicitly rejected (and from whom)
 - **Global requirement/decision ID registries** (GSD `REQ-001`/`D-01`, spec-kit FR-numbers):
@@ -623,7 +638,8 @@ role-scoped skill *packs* are minions' dispatch-time injection; this is about wh
    templates), `/minions:status`, `/minions:feedback`, STATE.md conventions, all templates.
 2. **The spine:** `/minions:feature` + step skills `specify`/`plan`/`code`/`verify` + agents
    specificator, planner, coder, verifier (+ all 11 agent files created, dormant ones thin).
-3. **Close the loop:** `architect` + `qa` + `review` steps wired; reconcile inline; plan-check
+3. **Close the loop:** `architect` + `qa` + `review` steps wired; reconcile inline; **`curate`
+   step + `curator` agent** (knowledge layer, `apply: review` default, threshold 3); plan-check
    loop wired (manual default).
 4. **Guard:** the two hooks (§9), soft mode.
 5. **`/minions:quick`.**
@@ -647,5 +663,6 @@ proves shallow → evals harness via skill-creator → extender agent → `/mini
   its folder.
 - Should `--auto` also lower the interaction budget (e.g. imply `questions=few`), or stay
   orthogonal to `questions`/`guard`? Currently orthogonal.
-- Where do unapplied `RECONCILE.md` suggestions go after archive? Fine buried for v1; a running
-  `docs/minions/knowledge-inbox.md` that survives archival is the natural later fix.
+- ~~Where do unapplied `RECONCILE.md` suggestions go after archive?~~ **Resolved** by the curator's
+  `knowledge-ledger.md` (survives archive, tracks candidate conventions + observation counts) — see
+  `2026-06-18-knowledge-curator-design.md` §5.
