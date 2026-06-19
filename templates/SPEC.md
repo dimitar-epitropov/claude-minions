@@ -18,6 +18,8 @@
 
 ## Clarifications
 
+> Dated log of the specificator interview. Add entries under a ### YYYY-MM-DD subheading.
+
 ### [YYYY-MM-DD]
 
 - Q: [Question raised during the specificator interview.] → A: [Answer agreed.]

@@ -8,6 +8,8 @@
 
 ## Tasks
 
+> Each task = one atomic commit. A task that covers no AC is a smell.
+
 - [ ] **T1: <action-oriented name>**
   - Do: [Concrete change — real file paths, what to add/change, how. Example: add
     `src/health.ts` exporting a Hono route `GET /health` that returns `{status:"ok"}`.]
@@ -15,12 +17,6 @@
     `curl -s localhost:3000/health | jq .status` prints `"ok"`.]
   - Commit: `feat: add /health endpoint`
   - Covers: AC-1
-
-- [ ] **T2: <action-oriented name>**
-  - Do: [...]
-  - Check: [...]
-  - Commit: `<type: message>`
-  - Covers: AC-2
 
 ## Warnings
 
