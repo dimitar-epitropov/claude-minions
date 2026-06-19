@@ -58,11 +58,13 @@ fixing is a later step's job.
    log-only function bodies, hardcoded fake values standing in for real logic. A stub on an AC's
    path means that AC is **not** satisfied.
    ```bash
-   grep -rnE "TODO|FIXME|not implemented|throw new Error\(.unimplemented" <paths-the-ACs-touch>
+   grep -rnE "TODO|FIXME|not implemented|return null|return \{\}|return \[\]|throw new Error" <paths-the-ACs-touch>
    ```
+   Adapt the patterns to the language (e.g. `return None`, `return []` in Python); the example is
+   illustrative, not exhaustive.
 4. **Run the proof where you can** — the task `Check` commands from PLAN.md, the feature's tests,
-   the build. Observe real output; don't assume. If a check can't be run, say why (and that pushes
-   the AC toward UNCERTAIN, not VERIFIED).
+   the build. Running checks is **read-only**: observe real output, never modify or commit code.
+   If a check can't be run, say why (and that pushes the AC toward UNCERTAIN, not VERIFIED).
 5. **Classify every `AC-n`** with one line of evidence:
    - **VERIFIED** — TRUE/EXIST/WIRED all hold and you saw the proof.
    - **FAILED** — a level doesn't hold, or a stub/smell sits on its path. Say what's missing.
@@ -95,8 +97,9 @@ fixing is a later step's job.
    (`path: <dir>`) if present, else `docs/minions/`. In **code mode** record: Step `verify`
    **done**, a one-line Status (e.g. "5/6 AC VERIFIED, 1 FAILED"), and the Next step. Next is
    `/minions:review`, which doesn't exist yet — so for now write **Next: `/minions:reconcile`**, and
-   if anything FAILED add "review the FAILED criteria". In **plan mode**, leave the verify step alone
-   and report back to the plan step that dispatched you.
+   if anything FAILED add "review the FAILED criteria". In **plan mode**, do **NOT** update
+   STATE.md at all — updating STATE is the dispatching plan step's job; just report verdicts back
+   via the return block.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 
