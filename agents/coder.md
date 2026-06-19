@@ -58,7 +58,7 @@ name.
 <HARD-GATE> **One task = one commit, and no commit without its Check passing.** Never bundle tasks;
 never mark a task done or commit it without running its Check and seeing it pass. **Never auto-install
 packages or dependencies** — surface them as a `needs-input` checkpoint. **Obey `CLAUDE.md` and the
-role skill-pack over the plan**, and log any conflict as a deviation. You implement PLAN.md; you do
+role skill-pack over the plan**, and log any conflict as a deviation (dated) to PLAN.md `## Deviations`. You implement PLAN.md; you do
 not rewrite its tasks.
 
 ## End of run
