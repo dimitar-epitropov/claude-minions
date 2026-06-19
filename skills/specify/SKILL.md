@@ -18,7 +18,7 @@ Announce: **"Running minions specify — clarifying the feature into a spec."**
 ## Step 1 — Resolve state & config
 
 Resolve the minions root: if `.minions-root` exists at repo root with `path: <dir>`, use that dir;
-if it says `disabled`, tell the user minions is disabled and stop; otherwise default to
+if it says `disabled`, tell the user minions is disabled here and stop; otherwise default to
 `docs/minions/`.
 
 If `<root>/STATE.md` is missing, tell the user to run `/minions:init` first and stop.
@@ -38,8 +38,11 @@ Otherwise create `<root>/features/NNN-slug/` where:
 
 Use Bash: `mkdir -p <root>/features/<NNN-slug>`.
 
-Update STATE.md: set Workflow to `feature`, Feature to `<NNN-slug>`, Step to `specify`,
-Status to `in progress`, Next to `/minions:specify` (self, until agent completes), Updated to today.
+**STATE ownership — this skill's only STATE write:** update STATE.md now, before dispatch: set
+Workflow to `feature`, Feature to `<NNN-slug>`, Step to `specify`, Status to `in progress`, Next
+to `/minions:specify` (self), Updated to today. This ensures an interrupted run is resumable (the
+in-progress marker is already set). Do NOT write a "done" status here — the specificator agent
+writes the end-of-run STATE update (Step `specify` → done, Next step) at the end of its run.
 
 ## Step 3 — Dispatch the specificator
 
@@ -55,15 +58,18 @@ Request: <the raw $ARGUMENTS / $0 text>
 Read these files (and nothing beyond what is listed here):
 - <root>/PRODUCT.md
 - <root>/TECH.md
-- (light codebase context if the request names specific files or modules — list them here)
+- <list specific files/modules if the request names them — omit this line entirely if none are named>
 ```
+
+If the request names no specific files or modules, omit the last bullet entirely — do not emit the
+placeholder line.
 
 Do NOT conduct the interview yourself. Do NOT write SPEC.md yourself. That is the specificator's job.
 
 ## Step 4 — Relay & pause
 
 When the agent returns, relay its full `Result / Summary / Next` block verbatim. Surface the path
-to `SPEC.md` so the user can open it.
+to `SPEC.md` so the user can open it. (The agent has already written the end-of-run STATE update.)
 
 Unless `auto` is on, **stop here** — tell the user the spec is ready for review and suggest
 `/minions:architect` (or `/minions:plan` if architect isn't available yet) as the next step. Wait
