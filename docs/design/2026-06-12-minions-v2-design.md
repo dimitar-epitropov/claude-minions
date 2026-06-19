@@ -276,6 +276,22 @@ and archived, never a home for durable knowledge. reconcile is the producer that
 writes to those surfaces — as tagged suggestions in `RECONCILE.md`, applied by you, never by the
 step itself (§4 step 8, §11.19).
 
+**Framework footprint & orientation pointer:** minions' footprint follows `mode` — *personal* in
+maintain, *part of the project* in vibe. A fresh session (or the main orchestrator) learns minions
+is even in play three ways, all **self-scoped to people who actually have the plugin**: the guard
+hook (§9, plugin-level — it physically cannot reach a teammate without minions), `/minions:status`,
+and a small **orientation pointer** — a fenced `<!-- minions -->` block naming what minions is,
+where state lives (`docs/minions/`, read `STATE.md` first), and the command to orient.
+`/minions:init` writes that block to the surface matching the project's audience: **vibe → root
+`CLAUDE.md`** (shared, always-loaded — collaborators share the workflow); **maintain →
+`CLAUDE.local.md`** (loaded last, gitignored — so a colleague without the plugin never reads a
+false "this repo uses minions" claim and never spends always-on context budget on a tool they
+can't run). This is the same rule that makes `docs/minions/` itself gitignore-able on work repos
+(see Artifacts header). The block is curator-managed and, like every root `CLAUDE.md` edit,
+human-gated (§4 step 9). Because `mode` tracks a rulebook, not headcount (§8), init states which
+surface it chose and offers to flip it (a solo maintain repo may want the shared file; a
+team-shared vibe repo may not).
+
 **Writing style:** artifacts are written for a reader who does *not* know every class name
 (vibe mode) or who knows the codebase well (maintain mode) — the specificator and planner adapt
 prose to `mode`. Plans are self-contained (BMAD's lesson, §11.14): the coder reads PLAN.md and
@@ -382,6 +398,11 @@ Plugin-level `hooks/hooks.json` (plugin agents can't carry hooks — platform re
    - `off`: hook exits silently.
 2. **Reconcile reminder** — `Stop` hook: if a feature is mid-flight past `code` and reconcile
    hasn't run, append a one-line reminder. Never blocks.
+
+Both hooks are plugin-level, so they only ever fire for someone who has minions installed — a
+teammate without the plugin gets nothing injected. That self-scoping is why the guard doubles as
+the safest orientation surface in a shared (maintain) repo: it reaches *you* and never confuses
+*them* (§7, framework footprint).
 
 Start soft everywhere; escalate per-project only where drift actually bites (principle 8).
 GSD ships 11 hooks; the lesson of its weight is that each hook must pay rent.
@@ -635,7 +656,8 @@ Full mechanism: `2026-06-18-knowledge-curator-design.md`.
 **Step 5 — the basics (each increment used on a real task before the next):**
 
 1. **Skeleton:** `/minions:init` (creates `docs/minions/`, config.yml via short interview,
-   templates), `/minions:status`, `/minions:feedback`, STATE.md conventions, all templates.
+   templates, and the mode-conditional orientation pointer §7), `/minions:status`,
+   `/minions:feedback`, STATE.md conventions, all templates.
 2. **The spine:** `/minions:feature` + step skills `specify`/`plan`/`code`/`verify` + agents
    specificator, planner, coder, verifier (+ all 11 agent files created, dormant ones thin).
 3. **Close the loop:** `architect` + `qa` + `review` steps wired; reconcile inline; **`curate`

@@ -79,12 +79,47 @@ Leave `TECH.md`, `DECISIONS.md`, `feedback.md` as their (near-empty) templates �
 work happens. **Do not** pre-populate the backlog or plan anything; planning the whole project up
 front is exactly the drift this framework avoids.
 
-## Step 4 — Report
+## Step 4 — Write the orientation pointer
+
+So any future session — and the main orchestrator — knows minions is in play, drop a small fenced
+pointer onto a native surface. **The destination follows `mode`:**
+
+- **vibe** → root `CLAUDE.md` (shared, always-loaded — collaborators share the workflow).
+- **maintain** → `CLAUDE.local.md` (loaded last, gitignored). **Never** the shared `CLAUDE.md`: a
+  colleague without the minions plugin would read a false "this repo uses minions" claim and pay
+  always-on context budget for a tool they can't run.
+
+The block (the markers make it curator-managed later):
+
+```
+<!-- minions -->
+This project uses **minions** for spec-driven work. Working state lives in `docs/minions/` —
+read `STATE.md` first. Run `/minions:status` to orient, `/minions:feature` or `/minions:quick`
+to make changes. Don't hand-edit `docs/minions/**`; it's framework-managed.
+<!-- /minions -->
+```
+
+Rules:
+- **Append, never clobber.** Most maintain repos already have a root `CLAUDE.md`. If the target
+  file exists, append the block after its current content; if a `<!-- minions -->` block is
+  already present, leave it untouched. Create the file if it's absent.
+- **maintain only — gitignore `CLAUDE.local.md`.** If `.gitignore` exists and doesn't already list
+  it, append a `CLAUDE.local.md` line; if there's no `.gitignore`, create one with that line.
+  Don't duplicate an existing entry.
+- Treat the root `CLAUDE.md` write as human-gated in spirit (it's an always-loaded surface) — if
+  anything about an existing `CLAUDE.md` looks surprising, show the diff and confirm first.
+
+## Step 5 — Report
 
 Tell the user what was created (the file list), show the resolved config (mode, guard, questions),
 echo the product sketch for a final nod, and point them at the next step: `/minions:feature` for a
 normal feature, or `/minions:quick` for a small edit. Mention `/minions:status` to re-orient any
 time and `/minions:feedback` to log friction.
+
+Say **which surface got the orientation pointer** — `CLAUDE.md` for vibe, the gitignored
+`CLAUDE.local.md` for maintain — and offer to flip it: `mode` tracks a rulebook, not headcount, so
+a solo maintain repo may prefer the shared file and a team-shared vibe repo may prefer the local
+one.
 
 ## Why it works this way
 
@@ -92,3 +127,11 @@ State lives in files, never in chat, so any future session resumes by reading `<
 *repo* knowledge (conventions, patterns) does **not** go here — it lives on Claude Code's native
 surfaces (`CLAUDE.md`, `.claude/rules/`, skills); `docs/minions/` is minions-private working
 state. `TECH.md` is just the index into those surfaces (design §11.19).
+
+The orientation pointer follows `mode` because minions' footprint follows `mode`: *part of the
+project* in vibe (shared `CLAUDE.md`), *personal* in maintain (gitignored `CLAUDE.local.md`) —
+mirroring how `docs/minions/` itself is gitignore-able on work repos. The point is that no
+always-loaded, shared surface ever claims "this repo uses minions" to a teammate who doesn't have
+the plugin. The guard hook and `/minions:status` are already self-scoped that way (plugin-level,
+so they only fire for plugin holders); the pointer just extends the same property to the
+always-on layer (design §7, §9).
