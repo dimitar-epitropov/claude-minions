@@ -34,7 +34,8 @@ If `<feature>/PLAN.md` does not exist, tell the user to run `/minions:plan` firs
 **STATE ownership — this skill's only STATE write:** update STATE.md now, before dispatch: set Step
 to `verify`, Status to `in progress`, Next to `/minions:verify` (self), Updated to today. This
 ensures an interrupted run is resumable. Do NOT write a "done" status here — the verifier agent
-writes the end-of-run STATE update (Step `verify` → done, Next step) at the end of its run.
+writes the end-of-run STATE update (Step `verify` → done, Next: `/minions:review`) at the end of
+its run. (Not built until increment 3 — fall back to `/minions:reconcile` / "address FAILED criteria".)
 
 ## Step 3 — Dispatch the verifier
 

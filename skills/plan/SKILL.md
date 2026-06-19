@@ -30,9 +30,6 @@ Read STATE.md. Use the active feature folder it records.
 
 If `<feature>/SPEC.md` does not exist, tell the user to run `/minions:specify` first and stop.
 
-Note: the `ARCH.md` path is tolerated as absent — the architect step arrives in increment 3. Pass it
-only if it exists.
-
 **STATE ownership — this skill's only STATE write:** update STATE.md now, before dispatch: set Step
 to `plan`, Status to `in progress`, Next to `/minions:plan` (self), Updated to today. This ensures
 an interrupted run is resumable. Do NOT write a "done" status here — the planner agent writes the
@@ -47,13 +44,15 @@ everything the agent needs — it must not hunt:
 Feature folder: <absolute path to feature folder>
 Mode: <maintain|vibe>
 SPEC.md: <absolute path to SPEC.md>
-ARCH.md: <absolute path to ARCH.md — omit this line entirely if ARCH.md does not exist>
+ARCH.md: <absolute path to ARCH.md>
 
 Read these files (and nothing beyond what is listed here):
 - <root>/PRODUCT.md
 - <root>/TECH.md
 - <list the real files/modules the feature will touch — read SPEC.md Goals/ACs to identify them>
 ```
+
+If `<feature>/ARCH.md` does not exist yet, omit the ARCH.md line entirely (the architect step arrives in increment 3).
 
 Do NOT plan the feature yourself. Do NOT write PLAN.md yourself. That is the planner's job.
 
