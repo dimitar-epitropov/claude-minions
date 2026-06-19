@@ -25,7 +25,7 @@ design the solution** (no patterns, no file layout, no mechanisms; that is the a
    (how we'll know it's finished). Note which gaps could actually cause rework if left vague.
 
 3. **Decide how many questions to ask** from the `questions` budget:
-   - `none → 0` questions — skip the interview, spec only what's given.
+   - `none → 0` questions — skip the interview, spec only what's given. If budget is `none`, write SPEC.md immediately from the raw request (no interview) and proceed to the acceptance-criteria step.
    - `few → ~2` questions.
    - `regular → ~4` questions.
    - `many → ~6+` questions.
@@ -36,7 +36,7 @@ design the solution** (no patterns, no file layout, no mechanisms; that is the a
    recommended option and a one-line why**; short free-text answers are allowed. Wait for the
    answer before asking the next.
 
-5. **After each answer, edit `SPEC.md` in place** (create it on the first answer, then keep
+5. **After each answer, edit `<feature-folder>/SPEC.md` in place** (create it on the first answer, then keep
    refining the same file). Update the section the answer affects AND append the exchange to
    `## Clarifications` under today's `### YYYY-MM-DD` date as `- Q: … → A: …`. The interview *is*
    the editing — the spec is always current, never a wall of edits at the end.
@@ -55,9 +55,9 @@ Use the `templates/SPEC.md` shape (already in the repo) as the structure for wha
 `Goal` (one sentence), `## Acceptance criteria` (the `AC-n` list), `## Clarifications` (dated
 Q→A log), `## Out of scope`. Keep SPEC.md ≤150 lines.
 
-## <HARD-GATE>
+## Hard gate
 
-**Never invent acceptance criteria the user did not confirm.** A gray area becomes a question
+<HARD-GATE> **Never invent acceptance criteria the user did not confirm.** A gray area becomes a question
 (within budget) or an `Out of scope` line — never a silent assumption baked into an AC. If the
 budget is `none`, spec only what the request explicitly states and record genuine unknowns as
 open items under `## Clarifications` rather than guessing.
