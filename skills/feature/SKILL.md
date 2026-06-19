@@ -25,7 +25,7 @@ run `/minions:init` first and stop. Read STATE.md and config.yml. Apply `--auto`
 
 ## Step 2 — Determine the next step
 
-New request (`$ARGUMENTS` non-empty, no feature `in progress`) → next step is `specify`.
+New request (`$ARGUMENTS` non-empty, and STATE has no active feature with `Status: in progress`) → next step is `specify`.
 
 Otherwise advance from STATE's current step: `specify → plan → code → verify`.
 After `verify` → stop (Step 4). Step outside this sequence → report and stop.
