@@ -383,7 +383,7 @@ git push origin main
 
 **Files:** none (manual verification). This is the increment's real "test".
 
-- [ ] **Step 1: Reinstall the plugin**
+- [x] **Step 1: Reinstall the plugin**
 
 ```bash
 # in the test session:
@@ -391,23 +391,23 @@ git push origin main
 # /reload-plugins
 ```
 
-- [ ] **Step 2: Run the spine on a tiny request**
+- [x] **Step 2: Run the spine on a tiny request**
 
 In a throwaway git repo: `/minions:init vibe`, then `/minions:feature "add a /health endpoint that
 returns 200 OK"`. Walk the HITL pauses: specify (answer the interview) → plan → code → verify.
 
-- [ ] **Step 3: Confirm the contract held**
+- [x] **Step 3: Confirm the contract held**
 
 Check: `docs/minions/features/001-*/SPEC.md` has `AC-n`; `PLAN.md` tasks carry `Covers: AC-n` and
 each became one commit (`git log --oneline`); `## Verification` has AC-by-AC verdicts; STATE tracked
 the step at each pause and a fresh `/minions:status` reported the right "you are here". Verify the
 guard reminder is absent (no hooks yet — that's inc4).
 
-- [ ] **Step 4: Capture friction**
+- [x] **Step 4: Capture friction**
 
 `/minions:feedback "<anything that felt off>"` for each rough edge. These shape increment 3.
 
-- [ ] **Step 5: Note results in this plan**
+- [x] **Step 5: Note results in this plan**
 
 Append a short "Increment 2 UAT results" note to this file (what worked, what to fix in inc3),
 commit:
@@ -417,6 +417,40 @@ git add docs/plans/2026-06-19-minions-v2-build.md
 git commit -m "Record increment 2 UAT results"
 git push origin main
 ```
+
+### Increment 2 UAT results (2026-06-22)
+
+Run by the user in `~/Projects/test-minions` — a richer test than the planned `/health` toy: a
+**Kanban board HTTP API** (TypeScript/Node + SQLite), `vibe` mode, `questions: regular`,
+`guard: soft`. `/minions:init vibe` → `/minions:feature`, walked all four HITL pauses. **Approved.**
+
+**Contract held — every check passed:**
+- **SPEC** — 17 EARS-style `AC-n` grouped by area; dated `## Clarifications` Q→A log (4 entries);
+  `## Out of scope`. The specificator never invented unconfirmed ACs.
+- **PLAN** — 6 tasks, each with Do/Check/`Commit:`/`Covers: AC-n`. Every one of AC-1…17 is covered;
+  the one no-AC task (T1 scaffold) is explicitly labelled infrastructure, not a silent gap.
+- **Atomic commits** — 6 tasks → 6 commits whose messages match the PLAN's `Commit:` lines
+  verbatim, plus one trailing `docs:` bookkeeping commit. No task bundling.
+- **Verification** — `## Verification` has 17/17 `AC-n: VERIFIED` lines, each citing the concrete
+  test that proves it (23/23 tests pass, `tsc` clean).
+- **Deviations** — one dated entry (T1 `DB` vs `Database` naming) — confirms the inc-2 final-review
+  fix (`458ea58`, "coder dated deviations") works in practice.
+- **STATE** — tracked the step at every pause; ended `verify` done, `Next: /minions:reconcile`.
+- **Orientation pointer** — `vibe` → block appended to root `CLAUDE.md`, no `CLAUDE.local.md`
+  (the new init Step 4 from `989c10f` works). Guard reminder correctly absent (hooks are inc 4).
+- No friction logged in the project's `feedback.md`.
+
+**Carry into increment 3 (observations, not failures):**
+- Agents grew two useful sections beyond the Task-1 templates: SPEC gained `## Context` and
+  `## Assumptions`; PLAN gained `## Orientation for the coder (read first)`. These strengthen
+  self-containment (§11.14) — fold them into `templates/SPEC.md` / `templates/PLAN.md` so they're
+  sanctioned, not improvised.
+- The SPEC `## Assumptions` section sits in mild tension with the specificator's `<HARD-GATE>`
+  ("gray areas become questions or out-of-scope, not assumptions"). Here the assumptions were
+  reasonable inferences, not invented ACs — but inc 3 should decide explicitly whether Assumptions
+  is a legitimate third bucket and reconcile the gate wording with the template.
+- `Next: /minions:reconcile` points at a step that doesn't exist until inc 3 — expected, and the
+  motivation for inc 3 closing the loop.
 
 ---
 
