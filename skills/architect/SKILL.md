@@ -22,7 +22,7 @@ if it says `disabled`, tell the user minions is disabled here and stop; otherwis
 
 If `<root>/STATE.md` is missing, tell the user to run `/minions:init` first and stop.
 
-Read `<root>/config.yml`. Extract `mode` and `auto`. If `--auto` was passed, set auto to on.
+Read `<root>/config.yml`. Extract `mode`, `auto`, and `skills.architect` (the role's skill pack). If `--auto` was passed, set auto to on.
 
 ## Step 2 — Find the active feature folder
 
