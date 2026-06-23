@@ -79,7 +79,7 @@ Check the plan goal-backward (coverage, grounding, provability). Return critical
 in your return block. Do NOT write ## Verification and do NOT update STATE.md.
 ```
 
-Take the returned criticals and warnings from the verifier's return block.
+Take the criticals and warnings the verifier reports on its `Deviations/Warnings:` line.
 
 Append each warning as a bullet to `PLAN.md ## Warnings` (replace the `_None yet._` line if
 it's still present).

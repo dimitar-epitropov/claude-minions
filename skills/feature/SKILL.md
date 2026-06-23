@@ -2,8 +2,7 @@
 name: feature
 description: >-
   Use when adding a normal feature to an existing project — "build X", "implement Y", "add Z to
-  this codebase". Standard tier: runs specify → plan → code → verify with HITL pauses after each
-  step. For a one-line or trivial change, use /minions:quick instead. For a greenfield project,
+  this codebase". Standard tier: runs specify → architect → plan → code → verify with HITL pauses after each step. For a one-line or trivial change, use /minions:quick instead. For a greenfield project,
   use /minions:project.
 argument-hint: "[request] [--auto]"
 arguments:
@@ -15,7 +14,7 @@ arguments:
 Announce: **"Running minions feature — routing to the next step."**
 
 <!-- Full sequence: specify → architect → plan → code → qa → verify → review → reconcile → curate.
-     Increment 2b wires: specify → architect → plan → code → verify. Remainder (qa → review → reconcile → curate) arrives in increments 3b/3c. -->
+     Increment 3a wires: specify → architect → plan → code → verify. Remainder (qa → review → reconcile → curate) arrives in increments 3b/3c. -->
 
 ## Step 1 — Resolve root & STATE
 
@@ -42,8 +41,7 @@ Relay the step's full `Result / Summary / Next` block verbatim.
 
 ## Step 4 — After verify
 
-Tell the user: verify is the last step in increment 2; review and reconcile arrive in increment 3.
-Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
+Tell the user: verify is the last wired step for now; qa, review, reconcile, and curate arrive in later increments. Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
 
 ## Hard gate
 
