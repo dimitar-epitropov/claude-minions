@@ -47,7 +47,7 @@ everything the agent needs — it must not hunt:
 Feature folder: <absolute path to feature folder>
 Mode: <maintain|vibe>
 SPEC.md: <absolute path to SPEC.md>
-ARCH.md: <absolute path to ARCH.md>
+[ARCH.md: <absolute path to ARCH.md> — include this line ONLY if <feature>/ARCH.md exists; omit it entirely otherwise]
 
 Read these files (and nothing beyond what is listed here):
 - <root>/PRODUCT.md
@@ -55,17 +55,13 @@ Read these files (and nothing beyond what is listed here):
 - <list the real files/modules the feature will touch — read SPEC.md Goals/ACs to identify them>
 ```
 
-If `<feature>/ARCH.md` exists, include its absolute path in the prompt above. If it is absent
-(the user ran `/minions:plan` directly without the architect step), omit that line — the planner
-already tolerates its absence.
+The architect step normally creates ARCH.md, so it usually exists; the bracket annotation in the fence handles both cases.
 
 Do NOT plan the feature yourself. Do NOT write PLAN.md yourself. That is the planner's job.
 
 ## Step 4 — Plan-check loop
 
-Determine the effective `plan_check` setting: if `--plan-check=<value>` was passed, use it;
-otherwise use `config.loops.plan_check` (default: `manual`). Read `config.loops.max_iters`
-(default: 3).
+Determine the effective `plan_check` from `--plan-check` else `config.loops.plan_check` (read in Step 1; default `manual`); `max_iters` from `config.loops.max_iters` (default 3).
 
 **off:** skip this step entirely — the single planner pass from Step 3 stands.
 
@@ -115,13 +111,7 @@ After the loop exits (clean, cap, or stall), surface any residual criticals in t
 
 ## Step 5 — Relay & pause
 
-When the agent returns, relay its full `Result / Summary / Next` block verbatim. Surface the path
-to `PLAN.md` so the user can open it. (The agent has already written the end-of-run STATE update.)
-
-Unless `auto` is on, **stop here** — tell the user the plan is ready for review and suggest
-`/minions:code` as the next step. Wait for them to proceed.
-
-If `auto` is on, state the next step and continue without waiting.
+Relay the agent's `Result / Summary / Next` block verbatim and surface the path to `PLAN.md`. Unless `auto` is on, stop and suggest `/minions:code` as the next step. If `auto` is on, state the next step and continue.
 
 ## Hard gate
 
