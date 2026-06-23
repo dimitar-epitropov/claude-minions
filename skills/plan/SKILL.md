@@ -6,8 +6,11 @@ description: >-
   feature, or when /minions:feature reaches the plan step. This is the minions plan step: normally
   invoked by /minions:feature, but runnable directly to (re)write the active feature's PLAN.md
   without restarting the workflow.
-argument-hint: "[--auto]"
-arguments: []
+argument-hint: "[--auto] [--plan-check=auto|manual|off]"
+arguments:
+  - name: --plan-check
+    values: [auto, manual, off]
+    description: Override config.loops.plan_check for this run.
 ---
 
 # minions: plan
@@ -52,15 +55,65 @@ Read these files (and nothing beyond what is listed here):
 - <list the real files/modules the feature will touch — read SPEC.md Goals/ACs to identify them>
 ```
 
-If `<feature>/ARCH.md` does not exist yet, omit the ARCH.md line entirely (the architect step arrives in increment 3).
+If `<feature>/ARCH.md` exists, include its absolute path in the prompt above. If it is absent
+(the user ran `/minions:plan` directly without the architect step), omit that line — the planner
+already tolerates its absence.
 
 Do NOT plan the feature yourself. Do NOT write PLAN.md yourself. That is the planner's job.
 
-**Note — plan-check loop (deferred to increment 3):** The full planner ⇄ verifier (`mode: plan`)
-loop, governed by `config.loops.plan_check`, is not wired here yet. For now this step dispatches
-the planner once. Increment 3 will add the loop.
+## Step 4 — Plan-check loop
 
-## Step 4 — Relay & pause
+Determine the effective `plan_check` setting: if `--plan-check=<value>` was passed, use it;
+otherwise use `config.loops.plan_check` (default: `manual`). Read `config.loops.max_iters`
+(default: 3).
+
+**off:** skip this step entirely — the single planner pass from Step 3 stands.
+
+**manual — one checked pass:**
+
+Dispatch `subagent_type: minions:verifier` with a self-contained prompt:
+
+```
+mode: plan
+Feature folder: <absolute path to feature folder>
+SPEC.md: <absolute path>
+PLAN.md: <absolute path>
+
+Check the plan goal-backward (coverage, grounding, provability). Return criticals and warnings
+in your return block. Do NOT write ## Verification and do NOT update STATE.md.
+```
+
+Take the returned criticals and warnings from the verifier's return block.
+
+Append each warning as a bullet to `PLAN.md ## Warnings` (replace the `_None yet._` line if
+it's still present).
+
+If there are criticals, re-dispatch `minions:planner` once with the original planner context
+(feature folder, mode, SPEC.md, ARCH.md if present, product/tech files) plus:
+
+```
+The plan-check verifier found these criticals — fix them. For anything you cannot fix,
+document it as a ## Warnings entry in PLAN.md:
+<paste criticals list>
+```
+
+Then stop the loop — manual means one checked pass; the human is the outer loop. If criticals
+remain after the replanner pass, surface them in the relay (Step 5).
+
+**auto — loop to max_iters with stall-stop:**
+
+Initialize `prev_critical_count = ∞`. Loop up to `max_iters` iterations:
+
+1. Dispatch `minions:verifier` (same prompt as manual above).
+2. Append this pass's warnings to `PLAN.md ## Warnings`.
+3. If criticals == 0: exit the loop (clean).
+4. If `len(criticals) >= prev_critical_count`: stop early — stall detected (no progress).
+5. Set `prev_critical_count = len(criticals)`. Re-dispatch `minions:planner` with the same
+   critical-fix prompt as in the manual branch.
+
+After the loop exits (clean, cap, or stall), surface any residual criticals in the relay.
+
+## Step 5 — Relay & pause
 
 When the agent returns, relay its full `Result / Summary / Next` block verbatim. Surface the path
 to `PLAN.md` so the user can open it. (The agent has already written the end-of-run STATE update.)
@@ -72,7 +125,9 @@ If `auto` is on, state the next step and continue without waiting.
 
 ## Hard gate
 
-<HARD-GATE> This skill orchestrates only. It never writes PLAN.md, never analyses the spec, and
-never dispatches any agent other than `minions:planner`. All domain reasoning — the task breakdown,
-grounding, the goal-backward check — belongs to the agent. If you find yourself writing plan
-content here, stop: put it in the dispatch prompt as context, not as output.
+<HARD-GATE> This skill orchestrates only. It never writes PLAN.md content, never analyses the
+spec, and never dispatches any agent other than `minions:planner` and `minions:verifier` (plan
+mode only) — nothing else. All domain reasoning — the task breakdown, grounding, the goal-backward
+check — belongs to the agents. If you find yourself writing plan content here, stop: put it in the
+dispatch prompt as context, not as output.
+</HARD-GATE>
