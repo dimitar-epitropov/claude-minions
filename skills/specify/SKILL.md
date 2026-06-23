@@ -71,7 +71,7 @@ Do NOT conduct the interview yourself. Do NOT write SPEC.md yourself. That is th
 When the agent returns, relay its full `Result / Summary / Next` block verbatim. Surface the path
 to `SPEC.md` so the user can open it. (The agent has already written the end-of-run STATE update.)
 
-Unless `auto` is on, **stop here** — tell the user the spec is ready for review and suggest `/minions:plan` as the next step (`/minions:architect` arrives in increment 3). Wait for them to proceed.
+Unless `auto` is on, **stop here** — tell the user the spec is ready for review and suggest `/minions:architect` as the next step. Wait for them to proceed.
 
 If `auto` is on, state the next step and continue without waiting.
 

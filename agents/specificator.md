@@ -66,8 +66,7 @@ open items under `## Clarifications` rather than guessing.
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
    (`path: <dir>`) if present, else `docs/minions/`. Record: Step `specify` **done**, a one-line
-   Status, and the Next step. The next step is the architect, which doesn't exist yet — so for now
-   write **Next: `/minions:plan`**.
+   Status, and the Next step. Write **Next: `/minions:architect`**.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 

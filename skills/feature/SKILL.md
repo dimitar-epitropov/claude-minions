@@ -15,7 +15,7 @@ arguments:
 Announce: **"Running minions feature — routing to the next step."**
 
 <!-- Full sequence: specify → architect → plan → code → qa → verify → review → reconcile → curate.
-     Increment 2 wires: specify → plan → code → verify. Remainder arrives in increment 3. -->
+     Increment 2b wires: specify → architect → plan → code → verify. Remainder (qa → review → reconcile → curate) arrives in increments 3b/3c. -->
 
 ## Step 1 — Resolve root & STATE
 
@@ -27,13 +27,13 @@ run `/minions:init` first and stop. Read STATE.md and config.yml. Apply `--auto`
 
 New request (`$ARGUMENTS` non-empty, and STATE has no active feature with `Status: in progress`) → next step is `specify`.
 
-Otherwise advance from STATE's current step: `specify → plan → code → verify`.
+Otherwise advance from STATE's current step: `specify → architect → plan → code → verify`.
 After `verify` → stop (Step 4). Step outside this sequence → report and stop.
 
 ## Step 3 — Invoke the step skill & relay
 
 Invoke via the Skill tool, passing `--auto` through:
-`minions:specify` (with request) · `minions:plan` · `minions:code` · `minions:verify`.
+`minions:specify` (with request) · `minions:architect` · `minions:plan` · `minions:code` · `minions:verify`.
 
 Relay the step's full `Result / Summary / Next` block verbatim.
 
