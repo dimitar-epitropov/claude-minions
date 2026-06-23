@@ -348,19 +348,19 @@ git push origin main
 
 **Files:** none (manual verification). This is the increment's real "test".
 
-- [ ] **Step 1: Reload the plugin**
+- [x] **Step 1: Reload the plugin**
 
 In a fresh test session (the new skills load when the session starts with the latest plugin):
 `/plugin update minions` then `/reload-plugins` if needed. Confirm `/minions:architect` is now an
 available skill.
 
-- [ ] **Step 2: Run the spine on a small request**
+- [x] **Step 2: Run the spine on a small request**
 
 In a throwaway git repo (a fresh one, or reuse `~/Projects/test-minions` with a new feature):
 `/minions:init` (or reuse), then `/minions:feature "<a small feature>"`. Walk the HITL pauses:
 specify → **architect** → plan → code → verify.
 
-- [ ] **Step 3: Confirm the new behavior held**
+- [x] **Step 3: Confirm the new behavior held**
 
 Check, in the active feature folder:
 - `ARCH.md` exists, is in the template shape (`## Patterns to follow` / `## New elements` /
@@ -373,13 +373,13 @@ Check, in the active feature folder:
 - The rest of the contract still holds (inc-2 checks): `Covers: AC-n`, one commit per task,
   `## Verification` AC-by-AC verdicts.
 
-- [ ] **Step 4: Capture friction**
+- [x] **Step 4: Capture friction**
 
 `/minions:feedback "<anything that felt off>"` for each rough edge — especially: did the architect
 add value in `maintain`/scout, or was it noise on a small feature? Did the plan-check loop's manual
 single-pass feel right? These shape 3b.
 
-- [ ] **Step 5: Note results in this plan**
+- [x] **Step 5: Note results in this plan**
 
 Append a short "Increment 3a UAT results" section to this file (what worked, what to fix in 3b),
 then commit:
@@ -389,6 +389,34 @@ git add docs/plans/2026-06-22-minions-v2-inc3a-architect.md
 git commit -m "Record increment 3a UAT results"
 git push origin main
 ```
+
+### Increment 3a UAT results (2026-06-23)
+
+Run by the user in `~/Projects/test-minions` (the inc-2 kanban project, `vibe` mode) as feature
+**002-kanban-board-ui** — a read-only kanban SPA over the 001 HTTP API. The full spine ran
+`specify → architect → plan(+check) → code → verify` and the feature built successfully. **Approved.**
+
+**The 3a additions worked, exercised for real:**
+- **architect ran and wrote `ARCH.md`** (139 lines, `vibe` → design, appropriately rich) in the
+  template shape — `## Patterns to follow` / `## New elements` / `## Libraries` / `## Open questions`
+  all present, `## Open questions` used correctly ("None blocking").
+- **The plan-check loop fired** — `PLAN.md ## Warnings` carries "From the plan-check verifier (plan
+  mode, 0 criticals)" with four substantive warnings. The headline 3a feature is live: the verifier
+  ran in `plan` mode, returned 0 criticals + warnings, and they landed in `## Warnings`.
+- **The loop delivered real value end-to-end** — plan-check caught a genuinely broken task check
+  (T1's `grep -c "AC-6"` would fail spuriously). The coder then consumed that warning during
+  execution and fixed the check, logging it under `## Deviations` ("Per the PLAN ## Warnings, ran
+  the corrected check"). Warning → coder → fix, exactly as designed.
+- **Inc-2 contract still holds** — atomic commit, `Covers: AC-n`, and `## Verification` with 12/12
+  AC VERIFIED (tsc clean, 26/26 tests pass, endpoints exercised live).
+
+**Carry into 3b (one observation, not a failure):**
+- The architect added a `## SPEC amendment to apply (AC-6 resolution — RESOLVED)` section: it found
+  a SPEC conflict (AC-6 vs AC-2) and resolved it inline in ARCH. This sits in mild tension with the
+  architect's `<HARD-GATE>` ("don't reopen settled SPEC decisions — a disagreement is an
+  `## Open questions` note, not a silent redesign"). It worked out well here, but 3b should decide
+  whether an architect *amending* SPEC is sanctioned or should route back to specify/reconcile —
+  the same class of question as inc-2's SPEC `## Assumptions` tension.
 
 ---
 
