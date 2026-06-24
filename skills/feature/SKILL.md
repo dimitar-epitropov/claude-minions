@@ -14,7 +14,7 @@ arguments:
 Announce: **"Running minions feature — routing to the next step."**
 
 <!-- Full sequence: specify → architect → plan → code → qa → verify → review → reconcile → curate.
-     Increment 3a wires: specify → architect → plan → code → verify. Remainder (qa → review → reconcile → curate) arrives in increments 3b/3c. -->
+     Currently wired: specify → architect → plan → code → verify → review. Remainder (reconcile → curate) arrives in a later increment. -->
 
 ## Step 1 — Resolve root & STATE
 
@@ -26,22 +26,22 @@ run `/minions:init` first and stop. Read STATE.md and config.yml. Apply `--auto`
 
 New request (`$ARGUMENTS` non-empty, and STATE has no active feature with `Status: in progress`) → next step is `specify`.
 
-Otherwise advance from STATE's current step: `specify → architect → plan → code → verify`.
-After `verify` → stop (Step 4). Step outside this sequence → report and stop.
+Otherwise advance from STATE's current step: `specify → architect → plan → code → verify → review`.
+After `review` → stop (Step 4). Step outside this sequence → report and stop.
 
 ## Step 3 — Invoke the step skill & relay
 
 Invoke via the Skill tool, passing `--auto` through:
-`minions:specify` (with request) · `minions:architect` · `minions:plan` · `minions:code` · `minions:verify`.
+`minions:specify` (with request) · `minions:architect` · `minions:plan` · `minions:code` · `minions:verify` · `minions:review`.
 
 Relay the step's full `Result / Summary / Next` block verbatim.
 
 **HITL (default):** stop after one step; suggest `/minions:feature` again to advance.
-**`--auto`:** loop Steps 2–3 until `verify` completes or a step returns `blocked`/`needs-input`.
+**`--auto`:** loop Steps 2–3 until `review` completes or a step returns `blocked`/`needs-input`.
 
-## Step 4 — After verify
+## Step 4 — After review
 
-Tell the user: verify is the last wired step for now; qa, review, reconcile, and curate arrive in later increments. Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
+Tell the user: review is the last wired step for now; reconcile and curate arrive in a later increment. Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
 
 ## Hard gate
 

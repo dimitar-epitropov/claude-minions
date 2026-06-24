@@ -35,7 +35,7 @@ If `<feature>/PLAN.md` does not exist, tell the user to run `/minions:plan` firs
 to `verify`, Status to `in progress`, Next to `/minions:verify` (self), Updated to today. This
 ensures an interrupted run is resumable. Do NOT write a "done" status here — the verifier agent
 writes the end-of-run STATE update (Step `verify` → done, Next: `/minions:review`) at the end of
-its run. (Not built until increment 3 — fall back to `/minions:reconcile` / "address FAILED criteria".)
+its run.
 
 ## Step 3 — Dispatch the verifier
 
@@ -64,9 +64,7 @@ to `PLAN.md ## Verification` so the user can see per-AC verdicts. (The agent has
 the end-of-run STATE update.)
 
 Unless `auto` is on, **stop here** — tell the user the verification is complete and suggest
-`/minions:review` as the next step (note: not built until increment 3 — fall back to
-`/minions:reconcile` or "address FAILED criteria" if review is unavailable). Wait for them to
-proceed.
+`/minions:review` as the next step. Wait for them to proceed.
 
 If `auto` is on, state the next step and continue without waiting.
 
