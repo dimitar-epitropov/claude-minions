@@ -33,7 +33,7 @@ Open:     <open threads / blockers, or "none">
 ```
 
 4. End by naming the **one** next thing to run and why. Map step → next step for the `feature`
-   spine: specify → architect → plan → code → qa → verify → review → reconcile → done. If no
+   spine: specify → architect → plan → code → verify → review → reconcile → curate → done. If no
    workflow is active, the next action is `/minions:feature` (normal feature) or `/minions:quick`
    (small edit).
 

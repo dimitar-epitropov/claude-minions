@@ -27,7 +27,7 @@ passed, set auto to on.
 **Effective apply** = `--apply` arg if provided, else `config.curate.apply` (default `review`).
 
 **Knowledge gate:** if `docs.knowledge` is `off`, skip curation — archive the never-curated
-feature folder (same archive procedure + clean-folder precondition as Step 7; abort if dirty),
+feature folder (resolve the active feature folder from STATE first, as Step 2 does) (same archive procedure + clean-folder precondition as Step 6; abort if dirty),
 write terminal STATE (Workflow `none` / Feature `none` / Step `none` / Status "knowledge layer
 off — skipped, archived" / Next `none`), relay "knowledge layer disabled; feature archived", stop.
 
@@ -41,7 +41,7 @@ diff + SPEC.)
 
 Read STATE. If STATE Step is `curate` with **Status `staged — awaiting approval`** (a prior
 `apply: review` pass already staged edits + wrote CURATE.md and paused), this is the **approval
-re-invocation** → skip straight to Step 7 (Finalize) and **do NOT re-dispatch the curator** —
+re-invocation** → skip straight to Step 6 (Finalize) and **do NOT re-dispatch the curator** —
 re-dispatching would re-mine the diff and double-increment the ledger. Otherwise this is a fresh
 run → continue to Step 4.
 
@@ -77,9 +77,9 @@ findings. It commits nothing and archives nothing.
 **Pause** — tell the human: review staged edits and re-run `/minions:curate` to approve (the step
 commits + archives; no manual `git commit`), or pass `--apply=auto` to do it now. Stop here.
 
-**If effective apply is `auto`:** fall straight through to Step 7 (Finalize).
+**If effective apply is `auto`:** fall straight through to Step 6 (Finalize).
 
-## Step 7 — Finalize: commit + archive + terminal STATE
+## Step 6 — Finalize: commit + archive + terminal STATE
 
 **Commit the curator's non-gated staged edits:** `git add` exactly the surface files listed in
 `<feature>/CURATE.md ## Staged edits` + `<root>/knowledge-ledger.md` + `<feature>/CURATE.md`;
