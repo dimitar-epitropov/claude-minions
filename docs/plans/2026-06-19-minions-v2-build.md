@@ -462,7 +462,7 @@ so it's informed by what we learned (minions plans one step deep — design §13
 ### Increment 3 — close the loop
 - Flesh out **architect** agent (scout/design by `mode`, may dispatch researcher) + `skills/architect/`
   step; insert after specify in `feature`. Writes `ARCH.md` (add `templates/ARCH.md`).
-- Flesh out **qa** agent + `skills/qa/` step (gated by `config.qa`); insert after code.
+- ~~**DROPPED (2026-06-24):** Flesh out **qa** agent + `skills/qa/` step (gated by `config.qa`); insert after code.~~ `agents/qa.md` stays dormant; `config.qa` is a forward-declared no-op; wired spine skips qa.
 - Flesh out **reviewer** agent (two-stage: spec-compliance, then quality; consumes
   `config.skills.reviewer`) + `skills/review/` step; insert after verify.
 - Wire the **plan-check loop** in `skills/plan/` (planner ⇄ verifier `mode:plan`, `loops.plan_check`
@@ -470,7 +470,7 @@ so it's informed by what we learned (minions plans one step deep — design §13
 - **reconcile** inline in a `skills/reconcile/` step: update SPEC/ARCH to the real diff; emit
   `RECONCILE.md` of tagged suggestions (mode-derived: vibe builds, maintain suggests gaps); archive
   the feature folder. Add `templates/RECONCILE.md`.
-- Done when `/minions:feature` runs all 8 steps end-to-end on a real work task.
+- Done when `/minions:feature` runs all wired steps end-to-end on a real work task: `specify → architect → plan → code → verify → review → reconcile → curate` (qa excluded).
 
 ### Increment 4 — the guard (two hooks)
 - `hooks/hooks.json`: **guard** (`PreToolUse` on `Edit|Write`; `soft` injects `additionalContext`

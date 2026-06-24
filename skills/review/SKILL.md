@@ -116,8 +116,7 @@ After the loop settles, **this step writes `<root>/STATE.md`** (the canonical sc
 Relay the reviewer's last `Result / Summary / Deviations-Warnings` block verbatim. Surface
 `<feature>/PLAN.md ## Warnings` (and `## Deviations` if fixes were applied).
 
-Unless `auto` is on, **stop here** and suggest `/minions:reconcile` as the next step (note: not
-built until increment 3c — fall back to "feature is reviewed; reconcile/curate arrive next"). Wait
+Unless `auto` is on, **stop here** and suggest `/minions:reconcile` as the next step. Wait
 for the user to proceed.
 
 If `auto` is on, state the next step and continue without waiting.

@@ -14,7 +14,7 @@ arguments:
 Announce: **"Running minions feature — routing to the next step."**
 
 <!-- Full sequence: specify → architect → plan → code → qa → verify → review → reconcile → curate.
-     Currently wired: specify → architect → plan → code → verify → review. Remainder (reconcile → curate) arrives in a later increment. -->
+     Currently wired: specify → architect → plan → code → verify → review → reconcile → curate. qa is intentionally skipped (deferred — see the inc-3c plan). Spine is now complete. -->
 
 ## Step 1 — Resolve root & STATE
 
@@ -26,22 +26,23 @@ run `/minions:init` first and stop. Read STATE.md and config.yml. Apply `--auto`
 
 New request (`$ARGUMENTS` non-empty, and STATE has no active feature with `Status: in progress`) → next step is `specify`.
 
-Otherwise advance from STATE's current step: `specify → architect → plan → code → verify → review`.
-After `review` → stop (Step 4). Step outside this sequence → report and stop.
+Otherwise advance from STATE's current step: `specify → architect → plan → code → verify → review → reconcile → curate`.
+After `curate` → stop (Step 4). Step outside this sequence → report and stop.
 
 ## Step 3 — Invoke the step skill & relay
 
 Invoke via the Skill tool, passing `--auto` through:
-`minions:specify` (with request) · `minions:architect` · `minions:plan` · `minions:code` · `minions:verify` · `minions:review`.
+`minions:specify` (with request) · `minions:architect` · `minions:plan` · `minions:code` · `minions:verify` · `minions:review` · `minions:reconcile` · `minions:curate`.
 
 Relay the step's full `Result / Summary / Next` block verbatim.
 
 **HITL (default):** stop after one step; suggest `/minions:feature` again to advance.
-**`--auto`:** loop Steps 2–3 until `review` completes or a step returns `blocked`/`needs-input`.
+**`--auto`:** loop Steps 2–3 until `curate` completes or a step returns `blocked`/`needs-input`.
 
-## Step 4 — After review
+## Step 4 — After curate
 
-Tell the user: review is the last wired step for now; reconcile and curate arrive in a later increment. Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
+The spine is complete: the feature has been reconciled, knowledge curated, and the folder archived.
+Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done.
 
 ## Hard gate
 
