@@ -290,7 +290,7 @@ minions` + `/reload-plugins` if needed).
 In a throwaway repo (or `~/Projects/test-minions` with a new feature): `/minions:feature "<a small
 feature>"`. Walk the HITL pauses: specify → architect → plan → code → verify → **review**.
 
-- [ ] **Step 3: Confirm the new behavior held**
+- [x] **Step 3: Confirm the new behavior held** (by-hand variant — see results below)
 
 - **review ran after verify;** **stage 1** compared the diff to SPEC (try building one unrequested
   extra to confirm stage 1 flags it against `## Out of scope`); **stage 2** ran the quality pass (and
@@ -303,13 +303,13 @@ feature>"`. Walk the HITL pauses: specify → architect → plan → code → ve
   still holds (ARCH.md, `Covers: AC-n`, atomic commits, `## Verification` verdicts, plan-check
   warnings).
 
-- [ ] **Step 4: Capture friction**
+- [x] **Step 4: Capture friction** (none — see results)
 
 `/minions:feedback "<anything that felt off>"` — especially: did stage-1 catch scope creep? Did the
 review-fix loop's manual one-pass feel right? Did the review step's terminal-STATE-overwrite behave
 (no stray code-STATE)? These shape 3c.
 
-- [ ] **Step 5: Note results in this plan**
+- [x] **Step 5: Note results in this plan**
 
 Append a short "Increment 3b UAT results" section to this file, then commit:
 
@@ -318,6 +318,40 @@ git add docs/plans/2026-06-23-minions-v2-inc3b-review.md
 git commit -m "Record increment 3b UAT results"
 git push origin main
 ```
+
+### Increment 3b UAT results (2026-06-24)
+
+Run as a **by-hand UAT** (the controller's session held the pre-3b plugin snapshot, so the live
+`/minions:feature` plumbing and `minions:reviewer`/`minions:coder` dispatch-by-type couldn't be
+triggered). Instead the review step's logic was executed by hand against a controlled scenario in a
+throwaway repo (`/tmp/minions-uat-3b-review`): a built `greet` feature (2/2 AC verified) whose diff
+carried a **deliberate scope-creep extra** (a `LANGUAGES`/`set_language` i18n scaffold — SPEC lists
+"Localization / i18n" under `## Out of scope`) and a **quality bug** (bare `except: pass`). Steps 1–2
+(live plugin reload + real spine run) were therefore substituted; a confirmatory live run is
+recommended when convenient. **Approved** — the review behavior is sound.
+
+**What held (each 3b behavior exercised for real):**
+- **Two-stage reviewer** — dispatched a general-purpose agent following the actual `agents/reviewer.md`.
+  **Stage 1** confirmed AC-1/AC-2 delivered and **flagged the i18n scaffold as Extra, citing the
+  `## Out of scope` list** (the YAGNI catch — the whole point of stage 1). **Stage 2** flagged the
+  bare `except` and the dead code. Findings were classified Critical/Important/Minor with `file:line`,
+  reported in the §6 return block; the reviewer **wrote nothing and made no fix**.
+- **Review-fix loop (manual = one pass)** — the Minor (None-handling) was appended to
+  `PLAN.md ## Warnings`; the two Important findings were fixed by re-dispatching the coder **once**
+  (following the actual `agents/coder.md`) with the "you are applying review fixes, not the plan"
+  prompt. The coder removed the out-of-scope scaffold (which also eliminated the bare `except`) in
+  **one atomic commit** and **logged a dated entry to `## Deviations`**; tests stayed green (2/2). The
+  loop then stopped (manual).
+- **Terminal STATE write** — written by the *step* (not an agent) in the **canonical STATE.md schema**
+  (`## Now`/`## Next`/`## Open`, `**Step:** review`, `**Status:** …`, `Next: /minions:reconcile`) —
+  confirming the final-review fix to that write. No stray `code`/`verify` STATE left by the fix-coder.
+
+**Friction:** none surfaced. The two-stage + out-of-scope catch and the manual one-pass loop behaved
+exactly as designed.
+
+**Note for 3c / a real run:** the live-plugin path (skill auto-trigger + subagent dispatch-by-type)
+was not exercised here; worth a quick real `/minions:feature` run in a fresh session to confirm the
+plumbing end-to-end alongside 3a's already-confirmed live run.
 
 ---
 
