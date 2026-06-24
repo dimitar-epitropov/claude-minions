@@ -74,14 +74,7 @@ Then assess the diff on these dimensions, citing `file:line` for every finding:
 
 Classify every finding **Critical / Important / Minor** with `file:line` and a one-line why.
 
-### `both` (default)
-
-Run stage 1 first, then stage 2. Report findings from both stages in the return block.
-
-### `lite`
-
-Collapse to a single combined pass: check compliance and quality together, shorter list. Used by
-the `quick` tier (increment 5). The feature review step uses `both`, not `lite`.
+**Stage modes:** `both` (default) runs stage 1 then stage 2 and reports findings from both. `lite` collapses to a single combined pass — compliance and quality together, shorter list; used by the `quick` tier (increment 5). The feature review step always uses `both`, not `lite`.
 
 ## End of run
 

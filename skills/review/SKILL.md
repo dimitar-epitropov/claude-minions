@@ -65,7 +65,7 @@ reviewer writes no STATE and no files.
 
 **off — no fixing:**
 
-Do not dispatch the coder. Relay all findings from the reviewer and go to Step 4.
+Do not dispatch the coder; continue to Step 4 (terminal STATE write), then Step 5 relays the findings.
 
 **manual (default) — one fix pass:**
 
@@ -91,7 +91,7 @@ Findings to fix:
 ```
 
 **Then stop the loop** — manual means one checked pass; the human is the outer loop. Any residual
-Critical/Important findings after the fix pass are surfaced in the relay (Step 4).
+Critical/Important findings after the fix pass are surfaced in the relay (Step 5).
 
 **auto — loop to max_iters with stall-stop:**
 
@@ -107,21 +107,9 @@ Initialize `prev_unresolved = ∞`. Loop up to `max_iters` iterations:
 After the loop exits (clean, cap hit, or stall), surface any residual Critical/Important findings
 in the relay.
 
-Do NOT review the diff yourself. Do NOT write findings as your own judgment. Do NOT fix code
-yourself. All review reasoning belongs to the reviewer; all fixing to the coder.
-
 ## Step 4 — Terminal STATE write (this step owns it)
 
-After the loop settles, **this step writes `<root>/STATE.md`** — overwriting any STATE the
-fix-coder may have left (the coder writes `Step code done, Next /minions:verify`, which is wrong
-here). Write:
-
-```
-Step: review done
-Status: <one-line summary, e.g. "review clean" or "2 Important fixed, 1 Minor noted">
-Next: /minions:reconcile
-Updated: <today>
-```
+After the loop settles, **this step writes `<root>/STATE.md`** (the canonical schema — `## Now`/`## Next`/`## Open`), overwriting any STATE the fix-coder left (the coder writes `Step code done, Next /minions:verify`, which is wrong here): set **Step** to `review`, **Status** to a one-line summary (e.g. "review clean" or "2 Important fixed, 1 Minor noted"), **Next** to `/minions:reconcile`, and **Updated** to today.
 
 ## Step 5 — Relay & pause
 
