@@ -63,6 +63,7 @@ cp "$CLAUDE_PLUGIN_ROOT"/templates/PRODUCT.md      <root>/PRODUCT.md
 cp "$CLAUDE_PLUGIN_ROOT"/templates/TECH.md         <root>/TECH.md
 cp "$CLAUDE_PLUGIN_ROOT"/templates/DECISIONS.md    <root>/DECISIONS.md
 cp "$CLAUDE_PLUGIN_ROOT"/templates/feedback.md     <root>/feedback.md
+cp "$CLAUDE_PLUGIN_ROOT"/templates/knowledge-ledger.md <root>/knowledge-ledger.md
 ```
 
 If `$CLAUDE_PLUGIN_ROOT` isn't set, locate the plugin's `templates/` directory and copy from

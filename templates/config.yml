@@ -30,7 +30,8 @@ loops:                    # each loop: manual (default) | auto | off
   review_fix: manual      #   auto   = the step loops up to max_iters with stall detection.
   max_iters: 3            # iteration cap when a loop is auto.
 
-qa: on                    # on | off — run the separate QA pass after code.
+qa: on                    # on | off — separate QA pass after code. NOTE: the qa step is not built
+                          # yet (deferred); this key is a forward-declared no-op until then.
 
 skills:                   # role -> skills the dispatch prompt orders that agent to consult & obey.
                           # Empty by default. On work projects, list your mandatory packs here, e.g.:
@@ -45,3 +46,14 @@ docs:
                           # patterns, and tech facts recorded onto CLAUDE.md / .claude/rules / skills
                           # (§11.19). The *style* follows mode: vibe builds new conventions, maintain
                           # records only undocumented gaps. Set off for throwaway prototypes.
+
+curate:                   # the knowledge curator (docs/design/2026-06-18-knowledge-curator-design.md).
+                          # Gated by docs.knowledge above — knowledge: off disables curate entirely.
+  apply: review           # review (HITL default — curator stages edits, you approve before commit)
+                          # | auto (commit non-gated edits directly; root CLAUDE.md still gated)
+  promote_threshold: 3    # a convention must recur in N features before it becomes a written rule
+  path: .claude/skills    # native surface for project skills the curator writes
+  cap_lines: 150          # soft cap per skill (the sdlc-* exemplar skills run ~50)
+  skills:                 # the seed skillset the curator guarantees exists
+    structural: [tech-stack, architecture]                       # refreshed from source each feature
+    convention: [code-style, design-patterns, testing, logging]  # evidence -> threshold -> rule
