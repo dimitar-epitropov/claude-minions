@@ -44,6 +44,13 @@ master roadmap on these points:
 - The curator emits **`CURATE.md`** (per-feature run summary) and maintains **`knowledge-ledger.md`**
   (cross-feature, survives archive), and it (via the step) **archives** the feature folder last.
 
+**Deliberately deferred this increment** (named so they're scope cuts, not accidents): the explicit
+`/minions:curate --init` bootstrap flag (the curator still **auto-seeds** the skillset on a first run
+with no skillset — Task 2 item 5 — we just don't add the flag); the whole-skillset `/minions:curate
+--audit` hygiene pass (curator design §9, explicitly "not v1") and with it the ledger **decay/prune**;
+and `quick --curate` / `project` reuse of the curate step (curate is wired into `feature` only this
+increment). These are follow-ups, not part of 3c.
+
 ## Global Constraints
 
 The full set lives in `docs/plans/2026-06-19-minions-v2-build.md` (increment 2). Every task here
@@ -135,6 +142,12 @@ In `templates/STATE.md`, the `**Step:**` line currently reads
 `[none | specify | architect | plan | code | qa | verify | review | reconcile]`. Add `curate`:
 `[none | specify | architect | plan | code | qa | verify | review | reconcile | curate]`.
 
+Also **soften the header claim**: the blockquote currently says "every agent **writes it last**" — that
+is no longer literally true (the review, reconcile, and curate steps own their terminal STATE because
+their agents can't). Change it to: "the responsible agent — or, for a step that owns its terminal STATE
+(review/reconcile/curate), the step — **writes it last**." (One-line factual fix, in scope because this
+increment adds two more step-owned-STATE writers.)
+
 - [ ] **Step 3: Create `templates/CURATE.md`**
 
 The per-feature curator run summary (lives in the feature folder, archived with it). Keep it tiny —
@@ -203,7 +216,8 @@ grep -q 'forward-declared no-op' templates/config.yml                           
 grep -q 'reconcile | curate' templates/STATE.md                                                       # curate in Step enum
 test -f templates/CURATE.md && grep -qE 'Promotions|Refreshes|Flags|Staged edits|Ledger deltas' templates/CURATE.md
 test -f templates/knowledge-ledger.md && grep -q 'first-seen feature' templates/knowledge-ledger.md
-grep -q 'knowledge-ledger.md' skills/init/SKILL.md                                                    # init copies the ledger
+grep -q 'templates/knowledge-ledger.md .*<root>/knowledge-ledger.md' skills/init/SKILL.md             # init copies the ledger to ROOT (not feature-local)
+grep -q 'review/reconcile/curate' templates/STATE.md                                                  # STATE header softened (step-owned terminal STATE)
 ! test -f templates/RECONCILE.md                                                                      # superseded — must NOT exist
 ```
 
@@ -275,14 +289,19 @@ doc, not copies):
      observation → increment the counter, do not write the rule.
    - **Verify before trust.** Ground every structural claim by reading the actual code, never prose
      memory. **Prune test** on every line you would add: "would removing this cause Claude to make a
-     mistake? If not, cut it." Dedup before write — never re-add a fact already present.
+     mistake? If not, cut it." — applied **hardest to always-on root `CLAUDE.md`** (steepest bloat
+     penalty). Dedup before write — never re-add a fact already present.
    - **Never blind-append.** Rewrite inside named managed-block anchors in place.
 
 3. **When invoked** — read the dispatch (feature folder, mode, apply, diff, SPEC/ARCH, ledger path,
    `config.curate`). Read the diff, SPEC.md, ARCH.md, the ledger, and the existing skillset at
    `config.curate.path`.
 
-4. **For each durable learning, two orthogonal decisions** (curator design §3):
+4. **For each durable learning, emit one Mem0-style gate decision, then make two orthogonal routing
+   decisions** (curator design §3, §6). The gate (per candidate, after the dedup check): **ADD** (new,
+   and — for a convention — past `promote_threshold`), **UPDATE** (refine an existing rule/fact in
+   place), **NOOP** (already covered — do nothing, distinct from a dedup-skip), or **FLAG** (contradicts
+   an existing rule — surface for the human, never silently overwrite). Then route what you ADD/UPDATE:
    - **(a) Which surface? — by trigger type:** task/intent (often cross-dir) → **skill**; touching one
      dir → per-dir `CLAUDE.md`; touching a glob → `.claude/rules/*` + `paths:`; every-turn
      non-negotiable → **root `CLAUDE.md`** (tiny, always-gated); the *why* → `DECISIONS.md` (append).
@@ -299,11 +318,17 @@ doc, not copies):
 
 5. **The seed skillset** (`config.curate.skills`): guarantee the seed skills exist — structural
    (`tech-stack`, `architecture`) on the factual path, convention (`code-style`, `design-patterns`,
-   `testing`, `logging`) on the threshold path. Generate a missing one; maintain a present one. Every
-   skill you write hits the §10 authoring bar: a `Use when…` trigger description (not a summary),
-   `Overview` → rules-as-tables → `Red flags — stop`, **pointers to DECISIONS/specs, not copies**;
-   ≤ `cap_lines` (soft). You may propose a skill *beyond* the seed for a recurring task-triggered
-   pattern with no home — gated like any new rule.
+   `testing`, `logging`) on the threshold path. **First run / no skillset:** if no skillset exists yet
+   at `config.curate.path` (greenfield, or adopting an existing repo), do a one-time **fuller codebase
+   scan** to seed all six skills before proceeding; thereafter curation is incremental and diff-driven.
+   Otherwise: generate a missing seed skill, maintain a present one. Every skill you write hits the §10
+   authoring bar: a `Use when…` trigger description (not a summary), `Overview` → rules-as-tables →
+   `Red flags — stop`, **pointers to DECISIONS/specs, not copies**; ≤ `cap_lines` (soft — **over-cap is
+   a smell the content belongs on a narrower surface: split or relocate, don't just trim**). You may
+   propose a skill *beyond* the seed for a recurring task-triggered pattern with no home — gated like
+   any new rule. (The explicit `/minions:curate --init` flag and the whole-skillset `--audit` hygiene
+   pass are **deferred** — see the scope note; this increment does the per-feature path + auto-seed on
+   first run.)
 
 6. **Mode behavior:** `vibe` → establish: full curation, lean toward creating skills + writing
    conventions (this is what makes feature #7 follow feature #3). `maintain` → comply: mostly verify
@@ -312,7 +337,9 @@ doc, not copies):
 
 7. **Apply staging (you stage, the step commits):**
    - Write all edits to the working tree (uncommitted).
-   - Update `knowledge-ledger.md`: add/increment candidate rows (ExpeL counter), mark promotions.
+   - Update `knowledge-ledger.md`: add/increment candidate rows (ExpeL counter), mark promotions. (Per
+     run you only ADD/increment + mark promotions; cross-feature **decay/prune** of stale candidates is
+     the deferred `--audit` hygiene pass, not this per-feature run.)
    - Write `<feature>/CURATE.md` following `templates/CURATE.md` — fill Promotions, Refreshes, Flags,
      **Staged edits** (every file you touched), Ledger deltas. List root `CLAUDE.md`/orientation-pointer
      edits under **Flags** (always-gated) regardless of apply mode.
@@ -334,9 +361,11 @@ doc, not copies):
 
 ```bash
 awk '/^---$/{c++;next} c==1{print} c==2{exit}' agents/curator.md | grep -E '^(name|description|tools):'   # frontmatter; tools include Write,Edit,Bash
-grep -Ei 'trigger type|managed.block|promote_threshold|threshold|dedup|prune|verify.before|root .?CLAUDE|always.?gated|knowledge-ledger|CURATE.md|seed|HARD-GATE|Result:' agents/curator.md   # all mechanisms present
+grep -Ei 'trigger type|managed.block|promote_threshold|threshold|dedup|ADD ?/ ?UPDATE ?/ ?NOOP ?/ ?FLAG|prune|verify.before|root .?CLAUDE|always.?gated|knowledge-ledger|CURATE.md|seed|HARD-GATE|Result:' agents/curator.md   # all mechanisms present (incl. the Mem0 ADD/UPDATE/NOOP/FLAG gate)
 grep -qi 'do NOT commit\|never commit' agents/curator.md && grep -qi 'do NOT archive\|never archive' agents/curator.md   # the step owns commit+archive
-! grep -qi 'update .*STATE.md\|write .*STATE' agents/curator.md   # curator writes no STATE (a line saying it deliberately does NOT is fine — adjust grep if so)
+grep -qiE 'do NOT write STATE|writes no STATE' agents/curator.md   # curator deliberately writes no STATE (positive assertion — the body MENTIONS "STATE" to disclaim it, so a `! grep` on the word would false-fail)
+! grep -Eqi 'git commit|git mv|features/archive' agents/curator.md   # never performs commit/archive ACTIONS (Bash is read-only git/grep + dedup only)
+grep -qiE 'first.run|no skillset|fuller .*scan|bootstrap' agents/curator.md   # first-run seed-scan path present
 wc -l agents/curator.md   # lean — heaviest agent but no padding
 ```
 
@@ -405,9 +434,13 @@ edit here.
 ```bash
 awk '/^---$/{c++;next} c==1{print} c==2{exit}' skills/reconcile/SKILL.md | grep -E '^(name|description|argument-hint):'
 grep -Ei 'SPEC|ARCH|git diff|in.?place|Step .reconcile. done|/minions:curate|HARD-GATE' skills/reconcile/SKILL.md
-! grep -qi 'RECONCILE.md' skills/reconcile/SKILL.md          # does NOT emit it
-! grep -qi 'archive' skills/reconcile/SKILL.md               # does NOT archive
-! grep -Eqi 'subagent_type|Agent tool|dispatch' skills/reconcile/SKILL.md   # inline — dispatches no agent
+# NOTE: do NOT grep for absence of the literal words "RECONCILE.md" / "archive" — the body
+# deliberately MENTIONS them to disclaim them ("does not emit RECONCILE.md", "never archives"), so a
+# `! grep` on the word would false-fail. Forbid the ACTIONS instead, and confirm the disclaimers exist:
+! grep -Eqi 'git mv|features/archive|mkdir .*archive|move the feature folder' skills/reconcile/SKILL.md   # performs no archive ACTION
+! grep -Eqi 'Write.*RECONCILE\.md|create .*RECONCILE\.md' skills/reconcile/SKILL.md                       # does not WRITE RECONCILE.md
+grep -Eqi '(no longer|does not|never).{0,20}(RECONCILE|archive)' skills/reconcile/SKILL.md                # the disclaimers are present
+! grep -Eqi 'subagent_type|Agent tool' skills/reconcile/SKILL.md   # inline — dispatches no agent
 wc -l skills/reconcile/SKILL.md   # lean
 ```
 
@@ -455,15 +488,22 @@ Body:
    `review`, promote_threshold default 3, path default `.claude/skills`, cap_lines default 150, the
    seed `skills.structural`/`skills.convention` lists); apply `--auto`; effective apply = `--apply`
    else `config.curate.apply` (default `review`).
-   - **Knowledge gate:** if `docs.knowledge` is `off`, **skip curation entirely** — write terminal
-     STATE (Step `curate` done, Status "knowledge layer off — skipped", Next none), archive the feature
-     folder, relay "knowledge layer disabled; feature archived", and stop. (Throwaway-prototype path.)
+   - **Knowledge gate:** if `docs.knowledge` is `off`, **skip curation entirely** — there are no
+     staged edits, so archive the never-curated feature folder using the **same archive procedure +
+     clean-folder precondition as Step 7** (abort if the folder is dirty), then write terminal STATE
+     (Workflow `none` / Feature `none` / Step `none` / Status "knowledge layer off — skipped, archived"
+     / Next `none`), relay "knowledge layer disabled; feature archived", and stop. (Throwaway-prototype
+     path.)
 3. **Find the active feature:** `<feature>/SPEC.md` missing → `/minions:specify`, stop. (ARCH/PLAN
    optional here — curator works from the diff + SPEC.)
-4. **Two-phase detection (resumable HITL):** if `<feature>/CURATE.md` **already exists** and the
-   working tree has **no uncommitted curator edits** (the human reviewed + committed under `apply:
-   review`) → this is the **approval re-invocation**: skip to Step 7 (archive + terminal STATE). Else
-   proceed to Step 5 (fresh curation).
+4. **Phase detection (resumable HITL — STATE is the authoritative signal, NOT the working tree).**
+   Read STATE. If STATE Step is `curate` with **Status `staged — awaiting approval`** (a prior
+   `apply: review` pass already staged edits + wrote CURATE.md and paused), this is the **approval
+   re-invocation** → skip straight to Step 7 (Finalize) and **do NOT re-dispatch the curator** —
+   re-dispatching would re-mine the diff and double-increment the ledger. Otherwise this is a **fresh
+   run** → continue to Step 5. (Do not infer "approved" from a clean working tree: under `apply: auto`
+   a gated root `CLAUDE.md` edit is intentionally left staged, and a human may have only partially
+   committed — the tree is not a reliable signal; STATE is.)
 5. **STATE ownership (in-progress):** Step `curate`, Status `in progress`, Next `/minions:curate`
    (self), Updated today.
 6. **Dispatch the curator.** Use the Agent tool with `subagent_type: minions:curator`. Self-contained
@@ -480,22 +520,34 @@ Body:
    ```
    The curator stages edits to the working tree, updates the ledger, writes `<feature>/CURATE.md`, and
    returns its findings. It commits nothing and archives nothing.
-7. **Finalize — commit + archive + terminal STATE (this step owns it):**
-   - **`apply: auto`:** commit the curator's **non-gated** staged edits — `git add` the touched surface
-     files (skills, per-dir `CLAUDE.md`, rules, DECISIONS.md) + `knowledge-ledger.md` + `<feature>/CURATE.md`,
-     `git commit -m "chore(knowledge): curate <NNN-slug>"`, `git push`. **Leave staged** any root
-     `CLAUDE.md` / orientation-pointer edit (always gated) and surface it for the human. Then **archive**:
-     `mkdir -p <root>/features/archive && git mv <root>/features/<NNN-slug> <root>/features/archive/<NNN-slug>`
-     (fall back to `mv` if not git-tracked), commit + push the move. Write terminal STATE: Workflow
-     `none` / Feature `none` / Step `curate` **done** / Status (e.g. "3 skills refreshed, 1 convention
-     promoted; archived") / Next `none` (feature shipped). Relay CURATE.md + any gated edits. Continue.
-   - **`apply: review` (default):** **do not commit, do not archive.** Relay `<feature>/CURATE.md` + the
-     staged diff (`git diff` / `git status`). **Pause:** tell the human to review the staged edits, then
-     either commit them and re-run `/minions:curate` to archive, or re-run with `--apply=auto` to commit
-     + archive in one go. Keep STATE at Step `curate` in progress, Next `/minions:curate` (resumable —
-     Step 4 detects the approved state on re-invocation). Stop.
-8. **Relay** the curator's last `Result / Summary / Deviations-Warnings` block verbatim alongside the
-   finalize outcome.
+   - **If effective apply is `review` (default):** **do not commit, do not archive.** Relay
+     `<feature>/CURATE.md` + the staged diff (`git status` / `git diff`). Set STATE: Step `curate`,
+     **Status `staged — awaiting approval`**, Next `/minions:curate`, Updated today. **Pause/stop** —
+     tell the human to review the staged edits and re-run `/minions:curate` to approve (the step
+     commits + archives on that re-invocation; no manual `git commit` needed), or `--apply=auto` to do
+     it now. (Phase 4 detects this status next time.)
+   - **If effective apply is `auto`:** fall straight through to Step 7 (Finalize).
+7. **Finalize — commit + archive + terminal STATE (this step owns it; reached by `apply: auto` and by
+   the `apply: review` approval re-invocation).**
+   - **Commit the curator's non-gated staged edits:** `git add` exactly the surface files listed in
+     `<feature>/CURATE.md ## Staged edits` (skills, per-dir `CLAUDE.md`, rules, DECISIONS.md) +
+     `<root>/knowledge-ledger.md` + `<feature>/CURATE.md`; `git commit -m "chore(knowledge): curate
+     <NNN-slug>"`; `git push`. **Never `git add` the root `CLAUDE.md` / orientation-pointer edit** — it
+     is always human-gated, even under `auto`; leave it staged/unstaged in the tree and surface it.
+   - **Archive** (precondition: nothing belonging to the feature folder is left staged — the only thing
+     intentionally left out is the *root* `CLAUDE.md`, which lives outside the folder, so the folder is
+     clean): `mkdir -p <root>/features/archive` then
+     `git mv <root>/features/<NNN-slug> <root>/features/archive/<NNN-slug>` (fall back to `mv` if not
+     git-tracked); commit + push the move. **If `git status` shows uncommitted/untracked files *inside*
+     the feature folder, abort the move** with a clear message (don't archive a dirty folder).
+   - **Terminal STATE:** Workflow `none`, Feature `none`, **Step `none`** (the whole feature workflow is
+     done — record curate completion in Status, mirroring how init writes `Step none / Status
+     initialized`), Status one line (e.g. "feature shipped — 3 skills refreshed, 1 convention promoted;
+     archived"), Updated today. **If a gated root `CLAUDE.md` edit remains staged**, set **Open** to
+     "root CLAUDE.md edit staged — review and commit it" and **Next** to that action (do NOT set Next
+     `none` and strand it); otherwise Next `none` (feature shipped).
+   - **Relay** CURATE.md + any gated edit, and the curator's last `Result / Summary /
+     Deviations-Warnings` block verbatim.
 
 `<HARD-GATE>`: orchestrates + finalizes only. It dispatches **only** `minions:curator` — nothing else.
 All knowledge reasoning + authoring belongs to the curator; the step's own writes are limited to git
@@ -507,12 +559,17 @@ unattended (always gated, even under `--apply=auto`).
 
 ```bash
 awk '/^---$/{c++;next} c==1{print} c==2{exit}' skills/curate/SKILL.md | grep -E '^(name|description|argument-hint):'   # argument-hint includes --apply
-grep -Ei 'minions:curator|docs.knowledge|apply|review|auto|archive|git mv|CURATE.md|knowledge-ledger|Step .curate. done|root .?CLAUDE|always.?gated|HARD-GATE' skills/curate/SKILL.md
-grep -qi 'knowledge.*off' skills/curate/SKILL.md          # knowledge-off skip path present
-grep -qi 'do not commit\|does not commit\|never commit' skills/curate/SKILL.md   # review pauses before commit
+grep -Ei 'minions:curator|docs.knowledge|apply|review|auto|git mv|features/archive|CURATE.md|knowledge-ledger|staged . awaiting approval|root .?CLAUDE|always.?gated|HARD-GATE' skills/curate/SKILL.md
+grep -qi 'knowledge.*off' skills/curate/SKILL.md                       # knowledge-off skip path present
+grep -Eqi 'apply.*=.*else|effective apply|--apply.*config.curate.apply' skills/curate/SKILL.md   # --apply precedence written (like 3b's --review-fix)
+grep -qiE 'staged . awaiting approval' skills/curate/SKILL.md          # the resumable review pause sub-state exists
+grep -qi 'do NOT re-?dispatch|never re-?dispatch' skills/curate/SKILL.md   # approval re-invocation does not re-run the curator (no ledger double-count)
+grep -q 'Step .none.' skills/curate/SKILL.md                          # terminal STATE is Step none (workflow done), not "curate done"
 # dispatches ONLY the curator (no other subagent_type):
-grep -oE 'subagent_type: [a-z:]+' skills/curate/SKILL.md | sort -u   # expect only minions:curator
+grep -oE 'subagent_type: [a-z:]+' skills/curate/SKILL.md | sort -u    # expect ONLY minions:curator
 wc -l skills/curate/SKILL.md   # over ~80 is a trim-smell, not a block
+# NOTE: the apply: review pause / apply: auto commit split is verified by the UAT (Task 6), not a grep —
+# a grep can only confirm the words "commit"/"review" appear, not that the branch logic is correct.
 ```
 
 - [ ] **Step 3: Commit**
@@ -545,14 +602,21 @@ git push origin main
 - Step 3 "Invoke the step skill" — add **`minions:reconcile`** then **`minions:curate`** to the invoke
   list, after `minions:review`.
 - Step 4 "After …": update to say the spine is complete after **curate** (feature reconciled, knowledge
-  curated, folder archived). Keep it increment-agnostic.
+  curated, folder archived). Keep it increment-agnostic. **Retain** the existing FAILED-AC reminder
+  ("Address any FAILED acceptance criteria in `PLAN.md ## Verification` before calling this done") — it
+  is still a live gate; do not drop it when rewriting this step.
 - Keep it a pure router; `wc -l` ≤ ~55 (two more steps may nudge it past 50; tighten prose if so, don't
   add logic).
 
 - [ ] **Step 2: Update `skills/review/SKILL.md`**
 
 Step 5's relay (line ~119–120) currently says reconcile is "not built until increment 3c — fall back to
-…". `/minions:reconcile` exists now: suggest it cleanly and drop the fallback parenthetical.
+…". `/minions:reconcile` exists now: suggest it cleanly and drop the fallback parenthetical. Scan the
+whole file for any other "arrive next" / "fall back" / "not built" remnant and remove it too.
+
+**Leave `agents/reviewer.md` alone** — its end-of-run `Next: /minions:reconcile` is already correct
+(3b set it); the chain tail `review → reconcile → curate` needs no edit there. (Don't "wire the chain"
+by re-editing the reviewer.)
 
 - [ ] **Step 3: Record the QA-dropped decision in the master roadmap**
 
@@ -569,7 +633,9 @@ excluded).
 grep -q 'specify → architect → plan → code → verify → review → reconcile → curate' skills/feature/SKILL.md   # comment + advance map
 grep -q 'minions:reconcile' skills/feature/SKILL.md && grep -q 'minions:curate' skills/feature/SKILL.md       # both in invoke list
 ! grep -q 'minions:qa' skills/feature/SKILL.md                                                                # qa stays out
-! grep -qi 'not built until increment 3\|fall back to .*reconcile' skills/review/SKILL.md                     # review points cleanly
+! grep -Eqi 'not built|arrive next|fall back' skills/review/SKILL.md                                          # review points cleanly (all remnants gone)
+grep -q '/minions:reconcile' agents/reviewer.md                                                               # chain tail intact (reviewer Next, left as-is)
+grep -qi 'FAILED' skills/feature/SKILL.md                                                                     # the FAILED-AC reminder was retained, not dropped
 grep -qiE 'DROPPED|~~.*qa|qa.*dropped' docs/plans/2026-06-19-minions-v2-build.md                              # decision recorded
 wc -l skills/feature/SKILL.md   # ≤ ~55
 ```
@@ -635,6 +701,37 @@ git push origin main
 ```
 
 ---
+
+## Plan review (2026-06-24, pre-execution)
+
+Peer-reviewed before execution (the project's cadence). The external cross-AI path (`codex`) was
+**unavailable** — its OAuth refresh token was expired (`refresh_token_reused`); re-auth via
+`codex login` is needed to use it. Two **independent internal reviewers** ran instead (design-fidelity
+lens; execution/consistency lens); both returned **SHIP-WITH-FIXES**. Fixes applied to this plan:
+
+- **HIGH — two-phase `apply: review` detection made STATE-based.** The original "CURATE.md exists +
+  clean tree → approved" heuristic misfired on partial commits and on `apply: auto`'s always-staged
+  root `CLAUDE.md`, and could re-dispatch the curator → double-count the ledger. Now keyed on STATE
+  `Status: staged — awaiting approval`; the approval re-invocation does **not** re-dispatch the curator,
+  and the **step** does the commit on approval (no manual `git commit` needed). (Task 4)
+- **HIGH — gated root `CLAUDE.md` no longer stranded.** When a gated root edit remains staged,
+  terminal STATE sets `Open` + a concrete `Next` instead of `none`; the feature folder is still
+  archived (the root file lives outside it). (Task 4)
+- **HIGH — three false-failing validate-greps fixed.** `!archive`/`!RECONCILE.md` (Task 3) and
+  `!write STATE` (Task 2) would have failed against bodies that must *mention* the term to disclaim it;
+  replaced with action-forbidding + positive-assertion greps. (Tasks 2, 3)
+- **HIGH — Next-pointer chain guarded; `agents/reviewer.md` confirmed already-correct (no edit).** (Task 5)
+- **MEDIUM — curator body now emits the Mem0 ADD/UPDATE/NOOP/FLAG gate; first-run auto-seed scan added;
+  `--init`/`--audit`/quick-project reuse recorded as explicit deferrals.** (Task 2 + scope note)
+- **MEDIUM — knowledge-off archive shares Step 7's clean-folder precondition.** (Task 4)
+- **LOW polish:** FAILED-AC reminder retained in feature Step 4; terminal STATE is `Step none` (not
+  "curate done") with completion in Status; `cap_lines`/prune-test nuances + ledger-decay deferral in
+  the curator body; STATE-template header softened; init ledger grep tightened. (Tasks 1, 2, 5)
+
+Both reviewers confirmed the plan is faithful to both design docs on every load-bearing point
+(reconcile no-RECONCILE.md/no-archive, curator owns the knowledge layer, ledger survives archive,
+trigger-type routing, factual-refresh vs convention-threshold, root-CLAUDE.md always gated) and found
+**no over-engineering** beyond the intentionally-heavy curator.
 
 ## Self-review
 
