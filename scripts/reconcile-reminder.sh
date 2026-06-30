@@ -29,12 +29,29 @@ step=$(mh_state_step "$root")
 status=$(mh_state_status "$root")
 
 # 7. Reminder condition: built-but-not-reconciled.
-#    Fire for: qa|verify|review (past code, reconcile not reached)
-#           or code + status contains "done" (code complete, not yet reconciled).
-#    Stay silent for: none, reconcile, curate, or code still in progress.
-case "$step" in
+#
+#    STATE format is non-deterministic: agents MAY write "done" folded into
+#    the Step value ("code done", "verify done") OR as a bare Step with a
+#    Status line that contains "done".  We must handle both forms robustly:
+#
+#      folded:  **Step:** code done    → step="code done", status=""
+#      split:   **Step:** code         → step="code",      status="all tasks committed and done"
+#      review:  **Step:** review       → step="review",    status="review clean"  (no "done" anywhere)
+#
+#    Derive a base token (first word of step) and a done_flag that is set
+#    when "done" appears in EITHER the step value OR the status.
+base=${step%% *}
+case "$step $status" in *done*) done_flag=1 ;; *) done_flag=0 ;; esac
+
+#    Fire for:
+#      qa|verify|review — these steps run after code; reconcile not reached yet.
+#        Fire regardless of done_flag (review writes "review clean", not "done").
+#      code — fire only when done_flag is set (not mid-build).
+#    Stay silent for: none, specify, architect, plan, reconcile, curate, and any
+#      code step that has not yet been marked done.
+case "$base" in
     qa|verify|review) : ;;
-    code) case "$status" in *done*) : ;; *) exit 0 ;; esac ;;
+    code) [ "$done_flag" = 1 ] || exit 0 ;;
     *) exit 0 ;;
 esac
 

@@ -57,10 +57,10 @@ assert_case() {
     esac
 
     if [ "$ok" -eq 1 ]; then
-        printf 'PASS  case %2d: %s\n' "$num" "$desc"
+        printf 'PASS  case %3s: %s\n' "$num" "$desc"
         PASS_COUNT=$((PASS_COUNT + 1))
     else
-        printf 'FAIL  case %2d: %s\n' "$num" "$desc"
+        printf 'FAIL  case %3s: %s\n' "$num" "$desc"
         printf '      exit=%d  stdout=%s\n' "$ec" "${stdout:-(empty)}"
         FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
@@ -120,16 +120,65 @@ ec=$?
 assert_case 2 "Step verify → has additionalContext" "$out" "$ec" "has" "additionalContext"
 assert_nonblocking "case 2" "$out"
 
-# ── Case 3: Step code + Status done → reminder present ───────────────────────
+# ── Case 3: Step "code done" (folded form — what coder.md actually writes) → reminder fires ──
+# agents/coder.md writes: **Step:** code done  (no separate Status "done")
 f=$(make_fixture)
-setup_minions "$f" "code" "done"
+setup_minions "$f" "code done" ""
 out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
 $(stop_stdin "$f")
 EOF
 )
 ec=$?
-assert_case 3 "Step code, Status done → has additionalContext" "$out" "$ec" "has" "additionalContext"
+assert_case 3 "Step 'code done' (folded form) → has additionalContext" "$out" "$ec" "has" "additionalContext"
 assert_nonblocking "case 3" "$out"
+
+# ── Case 3b: Step "verify done" (folded form — what verifier.md actually writes) → reminder fires ──
+# agents/verifier.md writes: **Step:** verify done
+f=$(make_fixture)
+setup_minions "$f" "verify done" ""
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case "3b" "Step 'verify done' (folded form) → has additionalContext" "$out" "$ec" "has" "additionalContext"
+assert_nonblocking "case 3b" "$out"
+
+# ── Case 3c: Step "review" + Status "review clean" (no "done") → reminder fires ──
+# skills/review/SKILL.md writes: **Step:** review  **Status:** review clean
+# review runs AFTER code so reconcile hasn't happened yet — fire regardless of done_flag.
+f=$(make_fixture)
+setup_minions "$f" "review" "review clean"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case "3c" "Step 'review' + Status 'review clean' (no done) → reminder fires" "$out" "$ec" "has" "additionalContext"
+assert_nonblocking "case 3c" "$out"
+
+# ── Case 3d: Step "code" + Status "in progress" (split form, mid-build) → SILENT ──
+# A split-form STATE where code is still running — must NOT fire the reminder.
+f=$(make_fixture)
+setup_minions "$f" "code" "in progress"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case "3d" "Step 'code' + Status 'in progress' (mid-build, split form) → empty stdout" "$out" "$ec" "empty"
+
+# ── Case 3e: Step "code" + Status "all tasks committed and done" (split form with done in status) → fires ──
+# An LLM may write done into the status rather than folding it into step.
+f=$(make_fixture)
+setup_minions "$f" "code" "all tasks committed and done"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case "3e" "Step 'code' + Status has 'done' (split form) → has additionalContext" "$out" "$ec" "has" "additionalContext"
+assert_nonblocking "case 3e" "$out"
 
 # ── Case 4: Step code + Status "in progress" → empty stdout ──────────────────
 f=$(make_fixture)
@@ -171,18 +220,20 @@ EOF
 ec=$?
 assert_case 7 "uninitialized repo → empty stdout" "$out" "$ec" "empty"
 
-# ── Case 8: malformed stdin (non-JSON, jq present) → empty stdout, exit 0 ────
+# ── Case 8: malformed stdin (non-JSON, jq present) → exit 0, non-blocking ────
 # When CLAUDE_PROJECT_DIR is unset and stdin is malformed, jq can't extract .cwd
-# so mh_project_dir falls back to $PWD. With no docs/minions there, root is empty → exit 0.
-# This tests the jq-parse fail-safe path end-to-end.
-f=$(make_fixture)
-# No docs/minions in cwd; use a temp dir as PWD that has no minions setup
+# so mh_project_dir falls back to $PWD.  If the shell's $PWD happens to point at
+# a live minions repo (e.g. this very repo during development), the reminder MAY
+# still fire — that is acceptable.  What matters is that malformed stdin never
+# causes a nonzero exit or a blocking "decision" response.
+# Assert: exit 0 + no "decision"/"block" (non-blocking guarantee, not strict empty).
 out=$(env -u CLAUDE_PROJECT_DIR bash "$SCRIPT" <<'EOF'
 not json
 EOF
 )
 ec=$?
-assert_case 8 "malformed stdin, no CLAUDE_PROJECT_DIR → empty stdout, exit 0 (fail-safe)" "$out" "$ec" "empty"
+assert_case 8 "malformed stdin, no CLAUDE_PROJECT_DIR → exit 0 (fail-safe, non-blocking)" "$out" "$ec" "lacks" '"decision"'
+assert_nonblocking "case 8" "$out"
 
 # ── Case 9: .minions-root disabled → empty stdout ────────────────────────────
 f=$(make_fixture)
