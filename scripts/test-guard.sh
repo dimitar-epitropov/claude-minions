@@ -25,7 +25,7 @@ setup_minions() {
     local d="$1" g="$2" s="$3"
     mkdir -p "$d/docs/minions"
     printf 'guard: %s\n' "$g" > "$d/docs/minions/config.yml"
-    printf '## Now\n**Step:** %s\n**Status:** \n' "$s" > "$d/docs/minions/STATE.md"
+    printf '## Now\n- **Step:** %s\n- **Status:** \n' "$s" > "$d/docs/minions/STATE.md"
 }
 
 # Helper: assert case
@@ -191,7 +191,10 @@ f=$(make_fixture)
 mkdir -p "$f/state"
 printf 'path: state\n' > "$f/.minions-root"
 printf 'guard: soft\n' > "$f/state/config.yml"
-printf '## Now\n**Step:** none\n**Status:** \n' > "$f/state/STATE.md"
+printf '## Now
+- **Step:** none
+- **Status:** 
+' > "$f/state/STATE.md"
 out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
 {"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f"}
 EOF
@@ -267,8 +270,35 @@ EOF
 ec=$?
 assert_case 17 "*.lock file → empty stdout (exempt)" "$out" "$ec" "empty"
 
+# ── Case 18: C1 regression — bulleted Step active (- **Step:** code) → SILENT ──
+# This case FAILS against the old col-0 grep and PASSES after Fix 1.
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf 'guard: soft\n' > "$f/docs/minions/config.yml"
+printf '## Now\n- **Step:** code\n- **Status:** building\n' > "$f/docs/minions/STATE.md"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
+{"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f"}
+EOF
+)
+ec=$?
+assert_case 18 "C1 regression: bulleted '- **Step:** code' (active) → empty stdout (silent)" "$out" "$ec" "empty"
+
+# ── Case 19: C1 regression — bulleted Step none (- **Step:** none) → nudges ──
+# This case FAILS against the old col-0 grep (step parsed as none by default, but the
+# new grep should parse it correctly and also return none — guard must nudge).
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf 'guard: soft\n' > "$f/docs/minions/config.yml"
+printf '## Now\n- **Step:** none\n- **Status:** \n' > "$f/docs/minions/STATE.md"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
+{"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f"}
+EOF
+)
+ec=$?
+assert_case 19 "C1 regression: bulleted '- **Step:** none' → has additionalContext (nudges)" "$out" "$ec" "has" "additionalContext"
+
 # ── Cleanup ───────────────────────────────────────────────────────────────────
-for d in "${FIXTURES[@]}"; do
+[ ${#FIXTURES[@]} -gt 0 ] && for d in "${FIXTURES[@]}"; do
     rm -rf "$d"
 done
 

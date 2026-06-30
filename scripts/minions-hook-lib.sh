@@ -115,9 +115,9 @@ mh_state_step() {
     local root="${1:-}"
     [ -z "$root" ] && { printf 'none'; return; }
     local line
-    line=$(grep -E '^\*\*Step:\*\*' "$root/STATE.md" 2>/dev/null | head -1)
+    line=$(grep -E '^[[:space:]]*-?[[:space:]]*\*\*Step:\*\*' "$root/STATE.md" 2>/dev/null | head -1)
     if [ -n "$line" ]; then
-        local val="${line#\*\*Step:\*\*}"
+        local val="${line##*\*\*Step:\*\*}"
         # Strip markdown bold markers, brackets, whitespace
         val="${val//\*\*/}"
         val="${val//[/}"
@@ -140,9 +140,9 @@ mh_state_status() {
     local root="${1:-}"
     [ -z "$root" ] && { printf ''; return; }
     local line
-    line=$(grep -E '^\*\*Status:\*\*' "$root/STATE.md" 2>/dev/null | head -1)
+    line=$(grep -E '^[[:space:]]*-?[[:space:]]*\*\*Status:\*\*' "$root/STATE.md" 2>/dev/null | head -1)
     if [ -n "$line" ]; then
-        local val="${line#\*\*Status:\*\*}"
+        local val="${line##*\*\*Status:\*\*}"
         val="${val//\*\*/}"
         # Trim whitespace
         while [ "${val#[[:space:]]}" != "$val" ]; do val="${val#[[:space:]]}"; done

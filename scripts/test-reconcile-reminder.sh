@@ -24,7 +24,7 @@ make_fixture() {
 setup_minions() {
     local d="$1" s="$2" st="$3"
     mkdir -p "$d/docs/minions"
-    printf '## Now\n**Step:** %s\n**Status:** %s\n' "$s" "$st" > "$d/docs/minions/STATE.md"
+    printf '## Now\n- **Step:** %s\n- **Status:** %s\n' "$s" "$st" > "$d/docs/minions/STATE.md"
 }
 
 # Helper: assert case
@@ -261,8 +261,44 @@ EOF
 ec=$?
 assert_case 10 "jq absent/broken (stub PATH) → empty stdout, exit 0 (fail-safe)" "$out" "$ec" "empty"
 
+# ── Case 11: C1 regression — bulleted Step review (- **Step:** review) → FIRES ──
+# This case FAILS against the old col-0 grep and PASSES after Fix 1.
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf '## Now\n- **Step:** review\n- **Status:** \n' > "$f/docs/minions/STATE.md"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case 11 "C1 regression: bulleted '- **Step:** review' → has additionalContext (fires)" "$out" "$ec" "has" "additionalContext"
+assert_nonblocking "case 11" "$out"
+
+# ── Case 12: C1 regression — bulleted Step code done → FIRES ─────────────────
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf '## Now\n- **Step:** code done\n- **Status:** \n' > "$f/docs/minions/STATE.md"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case 12 "C1 regression: bulleted '- **Step:** code done' → has additionalContext (fires)" "$out" "$ec" "has" "additionalContext"
+assert_nonblocking "case 12" "$out"
+
+# ── Case 13: C1 regression — bulleted Step none (- **Step:** none) → SILENT ──
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf '## Now\n- **Step:** none\n- **Status:** \n' > "$f/docs/minions/STATE.md"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$SCRIPT" <<EOF
+$(stop_stdin "$f")
+EOF
+)
+ec=$?
+assert_case 13 "C1 regression: bulleted '- **Step:** none' → empty stdout (silent)" "$out" "$ec" "empty"
+
 # ── Cleanup ───────────────────────────────────────────────────────────────────
-for d in "${FIXTURES[@]}"; do
+[ ${#FIXTURES[@]} -gt 0 ] && for d in "${FIXTURES[@]}"; do
     rm -rf "$d"
 done
 
