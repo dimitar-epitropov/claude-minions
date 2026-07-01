@@ -432,6 +432,24 @@ Fixes applied to the plan from the valid findings:
 - **Status parse + documented edge:** guard keys on Step≠none and `curate` resets Step→`none` on ship
   (verified inc3c); an abandoned feature at a done step is a named, accepted edge.
 
+## Post-UAT correction (2026-07-01) — guard keys on edit origin, not STATE.Step
+
+Live UAT surfaced a design flaw in the guard's silence rule (this plan, Task 1 Step 2 branch 9 + the
+Global Constraints "active workflow ⟺ Step != none"). **That rule is wrong and has been replaced.**
+`Step: code` means "a feature is mid-flight," **not** "this edit is going through minions" — a freehand
+main-session edit while a feature sits at `code` is still un-governed and must be nudged. The correct
+signal is **edit origin**: the hook stdin carries a top-level `agent_id` *present only inside a subagent*
+(Claude Code docs). minions edits code via the **coder subagent**, so:
+- **`agent_id` present (any subagent edit) → silent** (governed; never nag/block the coder). *(Maintainer
+  decision: silence on ANY subagent, not just minions agents — simple/robust.)*
+- **`agent_id` absent (main session) → nudge/deny**, regardless of `STATE.Step`.
+
+`guard.sh` no longer reads `STATE.Step` (dropped `mh_state_step`; `mh_state_step`/`mh_state_status`
+remain for the reconcile-reminder, which correctly *does* use STATE). Fixed in commit `67c733b`;
+`test-guard.sh` updated (subagent-silent cases + main-session-nudge-mid-feature case; old
+"Step active → silent" case flipped). Design §9 updated to match. Supersedes branch 9 + the
+"active workflow" wording above wherever they conflict.
+
 ## Self-review
 
 - **Spec coverage (design § by §):** §9 hook 1 (guard, `PreToolUse` Edit|Write, soft/hard/off, "active

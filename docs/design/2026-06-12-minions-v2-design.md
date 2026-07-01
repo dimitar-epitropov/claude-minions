@@ -390,12 +390,21 @@ apply it (§11.19) — `vibe` just *generates* more of it and `maintain` *defers
 
 Plugin-level `hooks/hooks.json` (plugin agents can't carry hooks — platform restriction).
 
-1. **Guard** — `PreToolUse` on `Edit|Write`. Script: is there an active minions workflow
-   (STATE.md) covering this work? Is the file source code (not docs/scratch)?
+1. **Guard** — `PreToolUse` on `Edit|MultiEdit|Write`. Script asks: **is this edit going through
+   minions?** The signal is **edit origin, not STATE** — minions does all its code editing via the
+   **coder subagent**, and the hook stdin carries a top-level `agent_id` *present only inside a
+   subagent call*. So: an edit made **inside any subagent** (`agent_id` present) is governed → stay
+   silent (never nag/block the coder). An edit from the **main session** (`agent_id` absent) is
+   un-governed → act, **regardless of what step a feature is on** (a freehand edit while a feature sits
+   at `Step: code` is still bad practice). Also silent when the file isn't source code (docs/scratch —
+   incl. `docs/minions/**`, `*.md`, `*/tmp/*` …) or the repo has no minions state (`config.yml`).
+   *(Rationale: `STATE.Step != none` only means "a feature exists," not "this edit is covered" — the
+   guard must not conflate them. Corrected 2026-07-01 from UAT.)*
    - `soft` (default): inject `additionalContext` — *"No active minions workflow. For
      code changes use /minions:quick or /minions:feature."* Claude steers; you can ignore it.
    - `hard`: `permissionDecision: deny` with the same message. Escape hatch: `guard: off`.
-   - `off`: hook exits silently.
+   - `off`: hook exits silently. **Fail-safe:** any error / no `jq` / unreadable state → exit 0 silent
+     (only exit 2 blocks, so a hook bug can never block an edit, even in `hard`).
 2. **Reconcile reminder** — `Stop` hook: if a feature is mid-flight past `code` and reconcile
    hasn't run, append a one-line reminder. Never blocks.
 
