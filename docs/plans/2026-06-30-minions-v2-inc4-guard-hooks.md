@@ -474,3 +474,38 @@ remain for the reconcile-reminder, which correctly *does* use STATE). Fixed in c
 - **Why this is testable, unlike prior increments:** these are real programs, so Tasks 1–2 ship unit
   tests (crafted stdin → asserted stdout/exit) that run in CI-less bash; Task 4 UAT then confirms the
   live hook wiring the unit tests can't reach.
+
+---
+
+## Increment 4 UAT results (2026-07-01)
+
+Live UAT against the **real published plugin** (`/plugin update minions` + `/reload-plugins`; `/hooks`
+listed the PreToolUse `Edit|MultiEdit|Write` + Stop hooks — confirming `hooks/hooks.json` auto-discovery
+and `${CLAUDE_PLUGIN_ROOT}` resolution). Run in `~/minions-inc4-uat-real` (outside `/tmp`).
+**Approved — all cases behaved as designed.**
+
+**What held:**
+- **guard soft:** a main-session code edit was steered (additionalContext delivered to Claude); `README.md`
+  was exempt (no steer).
+- **guard hard:** a main-session code edit was **denied**; a **multi-hunk (MultiEdit)** edit was **denied
+  too** (the matcher covers MultiEdit — no bypass).
+- **edit-origin correctness (the headline fix):** a main-session edit while `Step: code` **still nudged**
+  — a mid-flight feature does not exempt a freehand edit. (Coder-subagent exemption via `agent_id` is
+  covered by `test-guard.sh`, not hand-testable.)
+- **reconcile reminder:** fired at `Step: review` on stop, **non-blocking**; silent at `Step: none`.
+
+**Two issues surfaced during UAT and resolved:**
+1. *Test-setup (not a hook defect):* the scaffold was initially under `/tmp`, which the guard exempts
+   (`*/tmp/*`) → no nudge. Moved the scaffold outside `/tmp`.
+2. *Real design flaw, fixed:* the guard originally silenced on `STATE.Step != none`, which wrongly waved
+   through freehand edits mid-feature. Corrected to key on **edit origin** (`agent_id`) — see the
+   "Post-UAT correction" section. Fixed in `67c733b`; design §9 + this plan updated in `7e5d2d3`.
+
+**Deferred follow-ups (logged in the ledger, for a later increment):**
+- Exempt globs (`*/tmp/*`, `*/build/*`, `*/dist/*`, `*/scratch/*`) match a segment *anywhere* in the
+  path — consider tightening (they err toward silence by design).
+- STATE's `Step` field is written **inconsistently** across agents (folded `code done` vs bare `review` +
+  separate Status) and as a bulleted list item — worth normalizing to one canonical writer/format
+  (both inc4 Criticals traced here).
+
+**INCREMENT 4 COMPLETE.**
