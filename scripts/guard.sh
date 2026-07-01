@@ -67,14 +67,15 @@ case "$fp" in
     # The .minions-root marker file itself
     */.minions-root)
         exit 0 ;;
-    # Everything else is treated as code — fall through to active-workflow check.
+    # Everything else is treated as code — fall through to agent-origin check.
 esac
 
-# 9. Active-workflow check: if a workflow is in flight, it owns these edits.
-step=$(mh_state_step "$root")
-[ "$step" != "none" ] && exit 0
+# 9. Agent-origin check: edits made inside a subagent (agent_id present) are
+# governed by minions (the coder edits via a subagent) — never nudge/deny them.
+agent_id=$(printf '%s' "$input" | jq -r '.agent_id // empty' 2>/dev/null)
+[ -n "$agent_id" ] && exit 0
 
-# 10. No active workflow + code edit → act per guard mode.
+# 10. Main-session code edit → act per guard mode.
 MSG="No active minions workflow. For code changes, use /minions:quick (small) or /minions:feature (larger) so the work is specced, planned, and reconciled."
 
 case "$guard" in

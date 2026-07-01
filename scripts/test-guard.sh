@@ -58,10 +58,10 @@ assert_case() {
     esac
 
     if [ "$ok" -eq 1 ]; then
-        printf 'PASS  case %2d: %s\n' "$num" "$desc"
+        printf 'PASS  case %4s: %s\n' "$num" "$desc"
         PASS_COUNT=$((PASS_COUNT + 1))
     else
-        printf 'FAIL  case %2d: %s\n' "$num" "$desc"
+        printf 'FAIL  case %4s: %s\n' "$num" "$desc"
         printf '      exit=%d  stdout=%s\n' "$ec" "${stdout:-(empty)}"
         FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
@@ -124,15 +124,48 @@ case "$out" in
     *)        printf 'FAIL  case 4b: hard mode output missing deny\n';  FAIL_COUNT=$((FAIL_COUNT + 1)) ;;
 esac
 
-# ── Case 5: guard: soft, Step code (active workflow) → empty stdout ───────────
+# ── Case 5: subagent edit (agent_id present), guard soft → empty stdout ───────
 f=$(make_fixture)
-setup_minions "$f" "soft" "code"
+setup_minions "$f" "soft" "none"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
+{"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f","agent_id":"sub-123","agent_type":"minions:coder"}
+EOF
+)
+ec=$?
+assert_case 5 "subagent edit (agent_id present), guard soft → empty stdout (governed)" "$out" "$ec" "empty"
+
+# ── Case 5b: subagent edit, guard hard → empty stdout (never blocked) ─────────
+f=$(make_fixture)
+setup_minions "$f" "hard" "none"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
+{"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f","agent_id":"sub-123","agent_type":"minions:coder"}
+EOF
+)
+ec=$?
+assert_case "5b" "subagent edit, guard hard → empty stdout (subagent never blocked)" "$out" "$ec" "empty"
+
+# ── Case 5c: main-session edit, Step code (mid-feature), soft → nudges ────────
+# The corrected behavior: freehand edit mid-feature (no agent_id) IS nudged.
+f=$(make_fixture)
+mkdir -p "$f/docs/minions"
+printf 'guard: soft\n' > "$f/docs/minions/config.yml"
+printf '## Now\n- **Step:** code\n- **Status:** building\n' > "$f/docs/minions/STATE.md"
 out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
 {"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f"}
 EOF
 )
 ec=$?
-assert_case 5 "guard: soft, Step code (active) → empty stdout" "$out" "$ec" "empty"
+assert_case "5c" "main-session edit, Step code, no agent_id, soft → additionalContext (nudge)" "$out" "$ec" "has" "additionalContext"
+
+# ── Case 5d: main-session edit, Step none, soft → additionalContext ───────────
+f=$(make_fixture)
+setup_minions "$f" "soft" "none"
+out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
+{"tool_name":"Write","tool_input":{"file_path":"$f/src/a.js"},"cwd":"$f"}
+EOF
+)
+ec=$?
+assert_case "5d" "main-session edit, Step none, no agent_id, soft → additionalContext" "$out" "$ec" "has" "additionalContext"
 
 # ── Case 6: framework file (absolute path to docs/minions/STATE.md) ──────────
 f=$(make_fixture)
@@ -270,8 +303,9 @@ EOF
 ec=$?
 assert_case 17 "*.lock file → empty stdout (exempt)" "$out" "$ec" "empty"
 
-# ── Case 18: C1 regression — bulleted Step active (- **Step:** code) → SILENT ──
-# This case FAILS against the old col-0 grep and PASSES after Fix 1.
+# ── Case 18: origin check — bulleted Step code, no agent_id → NUDGES ─────────
+# Step is no longer the silence gate; only agent_id controls silence.
+# Main-session edit mid-feature (no agent_id) must be nudged regardless of Step.
 f=$(make_fixture)
 mkdir -p "$f/docs/minions"
 printf 'guard: soft\n' > "$f/docs/minions/config.yml"
@@ -281,7 +315,7 @@ out=$(CLAUDE_PROJECT_DIR="$f" bash "$GUARD" <<EOF
 EOF
 )
 ec=$?
-assert_case 18 "C1 regression: bulleted '- **Step:** code' (active) → empty stdout (silent)" "$out" "$ec" "empty"
+assert_case 18 "origin check: bulleted '- **Step:** code', no agent_id → additionalContext (nudge)" "$out" "$ec" "has" "additionalContext"
 
 # ── Case 19: C1 regression — bulleted Step none (- **Step:** none) → nudges ──
 # This case FAILS against the old col-0 grep (step parsed as none by default, but the
