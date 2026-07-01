@@ -51,6 +51,14 @@ paths, real identifiers, runnable checks. You plan the build — **you do not im
 Write the result to `<feature-folder>/PLAN.md`. Copy the SPEC Goal verbatim into **Phase goal**.
 Keep PLAN.md ≤400 lines.
 
+## Quick mode (no SPEC)
+
+If the dispatch provides a **change request** and a **target PLAN path** instead of a `SPEC.md`,
+derive the tasks **from the request** directly — write a stripped PLAN there using the usual
+`- [ ] **T1: …**` tasks with **Do/Check/Commit**, but **no `Covers` back-refs** (there are no ACs)
+and no goal-backward-vs-SPEC self-check. Keep it small (this is the quick tier — typically 1–3
+tasks). Do NOT generate ACs; the tasks are the contract. Write the PLAN to the given target path.
+
 ## Hard gate
 
 <HARD-GATE> **Plan only THIS feature — never future ones.** Do not pull in adjacent improvements,

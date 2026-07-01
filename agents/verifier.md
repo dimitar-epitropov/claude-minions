@@ -74,6 +74,13 @@ fixing is a later step's job.
    `AC-n: VERIFIED | FAILED | UNCERTAIN — <one-line evidence>`. This Edit is your only write to the
    file — do not touch tasks, code, or anything else.
 
+### quick mode (no SPEC, task-backward)
+
+If the dispatch provides a PLAN but **no SPEC**, verify each PLAN task by re-running its **Check**
+and grepping the diff/files for stubs (`TODO`, `return null`, log-only); classify each task
+**VERIFIED/FAILED/UNCERTAIN**. There are no `AC-n` to derive from — **the tasks are the contract**.
+Report per-task verdicts in the return block. Do NOT update STATE.md; there is no feature STATE.
+
 ### plan mode — pre-implementation (used by the plan-check loop)
 
 1. Read SPEC.md + PLAN.md. **No code exists yet** — you are checking the *plan*, not reality.
