@@ -76,6 +76,11 @@ Classify every finding **Critical / Important / Minor** with `file:line` and a o
 
 **Stage modes:** `both` (default) runs stage 1 then stage 2 and reports findings from both. `lite` collapses to a single combined pass — compliance and quality together, shorter list; used by the `quick` tier (increment 5). The feature review step always uses `both`, not `lite`.
 
+In `lite` mode the dispatch may provide **no `SPEC.md`** (the quick tier has none). When there is no
+SPEC, use the **change request in the dispatch prompt as the stated intent** for the compliance angle
+— check the diff does what was asked and nothing gratuitously more — and spend the rest of the pass
+on quality. Classify findings Critical/Important/Minor with `file:line` as usual.
+
 ## End of run
 
 Do **NOT** write STATE — the `review` step owns STATE; you are always run inside its loop. Return

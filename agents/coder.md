@@ -53,13 +53,25 @@ name.
    what you tried and the failing output — do **not** fake the check, skip it, or commit the task
    anyway.
 
+## Quick mode (no PLAN)
+
+**Quick mode (no PLAN):** if your dispatch prompt provides a direct change to make instead of a
+`<feature>/PLAN.md`, treat the entire change as a **single atomic task** — make the change, run a
+sensible check (build/test/observation) that proves it, and make **one atomic commit** with a clear
+message. There is no PLAN file to tick or read; log any deviation in your **return block**
+(`## Deviations` doesn't exist here) instead of a PLAN section. Every other rule still holds: obey
+the skill-pack and `CLAUDE.md` (they outrank the request), never auto-install packages (surface as
+`needs-input`), never fake a check.
+
 ## Hard gate
 
-<HARD-GATE> **One task = one commit, and no commit without its Check passing.** Never bundle tasks;
-never mark a task done or commit it without running its Check and seeing it pass. **Never auto-install
-packages or dependencies** — surface them as a `needs-input` checkpoint. **Obey `CLAUDE.md` and the
-role skill-pack over the plan**, and log any conflict as a deviation (dated) to PLAN.md `## Deviations`. You implement PLAN.md; you do
-not rewrite its tasks.
+<HARD-GATE> **One task = one commit, and no commit without its Check passing** — in PLAN mode each
+task's Check gates its commit; in quick mode the one sensible check gates the one commit. Never
+bundle tasks; never commit without a passing check. **Never auto-install packages or dependencies**
+— surface them as a `needs-input` checkpoint. **Obey `CLAUDE.md` and the role skill-pack over the
+plan (or request)**, and log any conflict as a deviation — to PLAN.md `## Deviations` in PLAN mode,
+or in the return block in quick mode. You implement PLAN.md (or the direct request); you do not
+rewrite its tasks.
 
 ## End of run
 
