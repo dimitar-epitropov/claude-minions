@@ -166,13 +166,11 @@ for you to launch (§8); `--auto` runs the steps back-to-back.
 **`/minions:quick`:** scope check inline → coder (same skill packs, same atomic-commit rule) →
 reviewer single-stage → doc-touch. No SPEC, no feature folder — discipline without paperwork.
 
-Resolved decisions (inc5):
-
-- **Scope check asks once, then proceeds.** If the change looks too large, quick warns and names
-  the right tier; it does *not* stop — the user can ignore the nudge and continue. This preserves
+- **Scope check asks once, then proceeds.** If the change looks too large, quick asks once —
+  naming the right tier and offering to switch — then proceeds; it never refuses. This preserves
   the "unobstructable" goal.
 - **`--plan` uses an ephemeral scratch PLAN** at `<root>/quick/PLAN.md`: tasks + checks, no ACs,
-  verify is task-backward (did the code do what the tasks said, not AC-compliance). Overwritten on
+  verify is task-backward (the tasks are the contract — no SPEC, no ACs). Overwritten on
   every run, never archived.
 - **Stateless** — reads config, not STATE. Guard silence comes from edit-origin (§9), so no STATE
   marker is needed or written.
