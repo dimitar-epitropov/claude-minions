@@ -28,8 +28,8 @@ Parse flags: `--plan` (planning mode), `--auto` (skip HITL pauses).
 - **No `--plan` (default):** invoke `minions:quick-code` via the Skill tool, passing the request
   and `--auto` if set.
 
-- **`--plan`:** `--plan` not yet available — running plain quick. Fall through to `minions:quick-code`
-  as above. *(Task 4 will wire in `minions:quick-plan`.)*
+- **`--plan`:** invoke `minions:quick-plan` via the Skill tool, passing the request and `--auto`
+  if set.
 
 ## Step 3 — Relay & stop
 
