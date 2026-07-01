@@ -80,6 +80,11 @@ rewrite its tasks.
    not "code done"; completion goes in Status), **Status** a one-line summary including completion
    (e.g. "done — N/N tasks committed"), and **Next: `/minions:verify`**.
 
+   **Quick mode (stateless):** if your dispatch prompt says "Quick mode (stateless)" (i.e. this is
+   a quick run with no feature STATE), do **NOT** update STATE.md at all — there is no feature STATE
+   to write; report your commit(s) in the return block only. This applies to both quick sub-cases: a
+   direct change with no PLAN, and a scratch PLAN at `<root>/quick/PLAN.md`.
+
 2. **Return the standard minions return block as the LAST thing in your reply:**
 
    ```

@@ -58,6 +58,7 @@ If a scratch PLAN path was passed (from `quick --plan`):
 PLAN.md: <path>
 Mode: <mode>
 <skill-pack line>
+Quick mode (stateless): do NOT update STATE.md — this is a quick run with no feature STATE; report commits in your return block only.
 ```
 
 Otherwise (direct change — quick mode):
@@ -66,13 +67,16 @@ Quick mode (no PLAN): make this change as a single atomic task.
 Change: <the request>
 Mode: <mode>
 <skill-pack line>
+Quick mode (stateless): do NOT update STATE.md — this is a quick run with no feature STATE; report commits in your return block only.
 ```
 
 Do not implement or commit anything here — that is the coder's job.
 
 ## Step 4 — Dispatch the reviewer (lite)
 
-After the coder returns `ok`, build the reviewer skill-pack line from `skills.reviewer`.
+After the coder returns `ok`, build the reviewer skill-pack line from `skills.reviewer`. If the
+coder returns `blocked` or `needs-input`, relay its block verbatim and STOP — do not proceed to
+the reviewer.
 
 Use the Agent tool with `subagent_type: minions:reviewer`. Pass a self-contained prompt:
 
