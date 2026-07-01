@@ -259,6 +259,15 @@ are **soft targets, not hard stops** — going over is a *smell* (the content ma
 native surface per §11.19, or not at all), not a wall the agent hits mid-task. Their job is to
 fend off the markdown sea (§11, failure mode 1) without strangling a genuinely complex feature.
 
+**STATE format (canonical — writers follow, readers/hooks parse exactly):** the `## Now` fields are
+markdown list items (`- **Field:** value`). **`Step` holds a single bare token** from the enum
+`{none, specify, architect, plan, code, qa, verify, review, reconcile, curate}` — status is *never*
+folded into it (write `code`, not `code done`). Completion/progress lives in **`Status`** only
+(e.g. `done — 5/6 AC verified`). This keeps `Step` a fixed, greppable enum so hooks and `/minions:status`
+parse it deterministically. *(Decision 2026-07-01: agents originally folded "done" into `Step`
+inconsistently — bare in the step skills, folded in coder/verifier — which caused two guard/reminder
+hook bugs in increment 4. Pinned in `templates/STATE.md`; enforced by every STATE writer.)*
+
 **ID scope:** `AC-n` and `T-n` are meaningful only inside their feature folder. Nothing outside
 the folder ever references them. This keeps Kiro-style traceability (task `covers: AC-2`,
 verifier checks AC-2) while killing the GSD experience of meeting `CR-01` in a file far from

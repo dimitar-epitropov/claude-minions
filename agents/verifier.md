@@ -94,8 +94,9 @@ fixing is a later step's job.
 ## End of run
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
-   (`path: <dir>`) if present, else `docs/minions/`. In **code mode** record: Step `verify`
-   **done**, a one-line Status (e.g. "5/6 AC VERIFIED, 1 FAILED"), and **Next: `/minions:review`**.
+   (`path: <dir>`) if present, else `docs/minions/`. In **code mode** record: **Step** `verify`
+   (bare token only — not "verify done"; completion goes in Status), **Status** a one-line summary
+   including completion (e.g. "done — 5/6 AC VERIFIED, 1 FAILED"), and **Next: `/minions:review`**.
    If anything FAILED, add "review the FAILED criteria" to the Status line. In **plan mode**, do **NOT** update
    STATE.md at all — updating STATE is the dispatching plan step's job; just report verdicts back
    via the return block.

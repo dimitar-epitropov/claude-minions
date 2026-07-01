@@ -64,8 +64,9 @@ not rewrite its tasks.
 ## End of run
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
-   (`path: <dir>`) if present, else `docs/minions/`. Record: Step `code` **done**, a one-line Status
-   (e.g. "N/N tasks committed"), and **Next: `/minions:verify`**.
+   (`path: <dir>`) if present, else `docs/minions/`. Record: **Step** `code` (bare token only —
+   not "code done"; completion goes in Status), **Status** a one-line summary including completion
+   (e.g. "done — N/N tasks committed"), and **Next: `/minions:verify`**.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 

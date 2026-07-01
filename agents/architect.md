@@ -51,8 +51,9 @@ record it under `## Open questions` (the researcher flow is not wired yet) rathe
 ## End of run
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
-   (`path: <dir>`) if present, else `docs/minions/`. Record: Step `architect` **done**, a one-line
-   Status, and **Next: `/minions:plan`**.
+   (`path: <dir>`) if present, else `docs/minions/`. Record: **Step** `architect` (bare token
+   only — not "architect done"; completion goes in Status), **Status** a one-line summary including
+   completion (e.g. "done — patterns scouted"), and **Next: `/minions:plan`**.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 

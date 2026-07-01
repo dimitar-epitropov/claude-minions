@@ -109,7 +109,7 @@ in the relay.
 
 ## Step 4 — Terminal STATE write (this step owns it)
 
-After the loop settles, **this step writes `<root>/STATE.md`** (the canonical schema — `## Now`/`## Next`/`## Open`), overwriting any STATE the fix-coder left (the coder writes `Step code done, Next /minions:verify`, which is wrong here): set **Step** to `review`, **Status** to a one-line summary (e.g. "review clean" or "2 Important fixed, 1 Minor noted"), **Next** to `/minions:reconcile`, and **Updated** to today.
+After the loop settles, **this step writes `<root>/STATE.md`** (the canonical schema — `## Now`/`## Next`/`## Open`), overwriting any STATE the fix-coder left (the coder writes `Step code` / `Next /minions:verify`, which is wrong here): set **Step** to `review` (bare token), **Status** to a one-line summary (e.g. "review clean" or "2 Important fixed, 1 Minor noted"), **Next** to `/minions:reconcile`, and **Updated** to today.
 
 ## Step 5 — Relay & pause
 

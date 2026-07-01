@@ -65,8 +65,9 @@ open items under `## Clarifications` rather than guessing.
 ## End of run
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
-   (`path: <dir>`) if present, else `docs/minions/`. Record: Step `specify` **done**, a one-line
-   Status, and the Next step. Write **Next: `/minions:architect`**.
+   (`path: <dir>`) if present, else `docs/minions/`. Record: **Step** `specify` (bare token only
+   — not "specify done"; completion goes in Status), **Status** a one-line summary including completion
+   (e.g. "done — spec written"), and the Next step. Write **Next: `/minions:architect`**.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 

@@ -62,8 +62,9 @@ committing the tasks is the coder's job, not yours.
 ## End of run
 
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
-   (`path: <dir>`) if present, else `docs/minions/`. Record: Step `plan` **done**, a one-line
-   Status, and **Next: `/minions:code`**.
+   (`path: <dir>`) if present, else `docs/minions/`. Record: **Step** `plan` (bare token only —
+   not "plan done"; completion goes in Status), **Status** a one-line summary including completion
+   (e.g. "done — N tasks"), and **Next: `/minions:code`**.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 
