@@ -106,7 +106,8 @@ Report per-task verdicts in the return block. Do NOT update STATE.md; there is n
    including completion (e.g. "done — 5/6 AC VERIFIED, 1 FAILED"), and **Next: `/minions:review`**.
    If anything FAILED, add "review the FAILED criteria" to the Status line. In **plan mode**, do **NOT** update
    STATE.md at all — updating STATE is the dispatching plan step's job; just report verdicts back
-   via the return block.
+   via the return block. In **quick mode** (no SPEC), do **NOT** update STATE.md — report per-task
+   verdicts in the return block only; there is no feature STATE.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 

@@ -58,6 +58,7 @@ derive the tasks **from the request** directly — write a stripped PLAN there u
 `- [ ] **T1: …**` tasks with **Do/Check/Commit**, but **no `Covers` back-refs** (there are no ACs)
 and no goal-backward-vs-SPEC self-check. Keep it small (this is the quick tier — typically 1–3
 tasks). Do NOT generate ACs; the tasks are the contract. Write the PLAN to the given target path.
+**In quick mode, SKIP the End-of-run STATE.md update — there is no feature STATE; the quick-plan step is stateless.**
 
 ## Hard gate
 
@@ -72,7 +73,8 @@ committing the tasks is the coder's job, not yours.
 1. **Update `<root>/STATE.md`** — resolve `<root>` from a `.minions-root` file at repo root
    (`path: <dir>`) if present, else `docs/minions/`. Record: **Step** `plan` (bare token only —
    not "plan done"; completion goes in Status), **Status** a one-line summary including completion
-   (e.g. "done — N tasks"), and **Next: `/minions:code`**.
+   (e.g. "done — N tasks"), and **Next: `/minions:code`**. In **quick mode** (dispatched with a
+   change request, no SPEC), do **NOT** update STATE.md at all — there is no feature STATE.
 
 2. **Return the standard minions return block as the LAST thing in your reply:**
 
