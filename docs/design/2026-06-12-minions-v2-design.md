@@ -164,9 +164,21 @@ By default the workflow pauses after every step, relays the result, and suggests
 for you to launch (§8); `--auto` runs the steps back-to-back.
 
 **`/minions:quick`:** scope check inline → coder (same skill packs, same atomic-commit rule) →
-reviewer single-stage → doc-touch (micro-reconcile: propose a `CLAUDE.md`/rule update *if* the
-change warrants, ask first). `--plan` inserts plan before code and verify after. No SPEC, no feature folder —
-discipline without paperwork.
+reviewer single-stage → doc-touch. No SPEC, no feature folder — discipline without paperwork.
+
+Resolved decisions (inc5):
+
+- **Scope check asks once, then proceeds.** If the change looks too large, quick warns and names
+  the right tier; it does *not* stop — the user can ignore the nudge and continue. This preserves
+  the "unobstructable" goal.
+- **`--plan` uses an ephemeral scratch PLAN** at `<root>/quick/PLAN.md`: tasks + checks, no ACs,
+  verify is task-backward (did the code do what the tasks said, not AC-compliance). Overwritten on
+  every run, never archived.
+- **Stateless** — reads config, not STATE. Guard silence comes from edit-origin (§9), so no STATE
+  marker is needed or written.
+- **`doc-touch` is silent unless a convention is clearly earned**: proposes a `CLAUDE.md`/rule
+  update only when the change unambiguously establishes a recurring pattern, asks first, root
+  `CLAUDE.md` always gated.
 
 ---
 
@@ -699,10 +711,12 @@ proves shallow → evals harness via skill-creator → extender agent → `/mini
 - Model assignments per agent (e.g. haiku for status/feedback paths) — defer until cost hurts.
 - `project` workflow's scoping front-end: how much of spec-kit's constitution idea to adopt for
   greenfield. Design when we get there.
-- Whether `quick` should auto-detect "you're editing an archived feature" and offer to reopen
-  its folder.
+- ~~Whether `quick` should auto-detect "you're editing an archived feature" and offer to reopen
+  its folder.~~ **Parked** — not built in inc5; stays a potential future convenience, not blocking
+  any current workflow.
 - Should `--auto` also lower the interaction budget (e.g. imply `questions=few`), or stay
-  orthogonal to `questions`/`guard`? Currently orthogonal.
+  orthogonal to `questions`/`guard`? **Still orthogonal** — `--auto` controls step sequencing
+  only; interaction budget is a separate knob. No reason to couple them has emerged.
 - ~~Where do unapplied `RECONCILE.md` suggestions go after archive?~~ **Resolved** by the curator's
   `knowledge-ledger.md` (survives archive, tracks candidate conventions + observation counts) — see
   `2026-06-18-knowledge-curator-design.md` §5.
